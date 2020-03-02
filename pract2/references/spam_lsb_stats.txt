@@ -1,0 +1,170 @@
+Lines: 11
+Number words (including stopwords): 77
+Number words (without stopwords): 60
+Vocabulary size: 18
+Number of symbols: 276
+Number of different symbols: 22
+Words (alphabetical order):
+	aux: 1
+	bacon: 6
+	baked: 1
+	beans: 1
+	brandy: 1
+	crevettes: 1
+	egg: 9
+	fried: 1
+	garnished: 1
+	lobster: 1
+	mornay: 1
+	pate: 1
+	sauce: 1
+	sausage: 4
+	spam: 27
+	thermidor: 1
+	top: 1
+	truffle: 1
+Words (by frequency):
+	spam: 27
+	egg: 9
+	bacon: 6
+	sausage: 4
+	aux: 1
+	baked: 1
+	beans: 1
+	brandy: 1
+	crevettes: 1
+	fried: 1
+	garnished: 1
+	lobster: 1
+	mornay: 1
+	pate: 1
+	sauce: 1
+	thermidor: 1
+	top: 1
+	truffle: 1
+Symbols (alphabetical order):
+	a: 49
+	b: 10
+	c: 8
+	d: 5
+	e: 25
+	f: 3
+	g: 23
+	h: 2
+	i: 3
+	k: 1
+	l: 2
+	m: 29
+	n: 10
+	o: 10
+	p: 29
+	r: 9
+	s: 40
+	t: 7
+	u: 7
+	v: 1
+Symbols (by frequency):
+	a: 49
+	s: 40
+	m: 29
+	p: 29
+	e: 25
+	g: 23
+	b: 10
+	n: 10
+	o: 10
+	r: 9
+	c: 8
+	t: 7
+	u: 7
+	d: 5
+	f: 3
+	i: 3
+	h: 2
+	l: 2
+	y: 2
+	k: 1
+Word pairs (alphabetical order):
+	$ egg: 5
+	$ lobster: 1
+	$ spam: 5
+	aux crevettes: 1
+	bacon $: 2
+	bacon sausage: 2
+	baked beans: 1
+	beans spam: 1
+	egg bacon: 2
+	egg sausage: 2
+	egg spam: 1
+	fried egg: 1
+	lobster thermidor: 1
+	mornay sauce: 1
+	pate brandy: 1
+	sauce garnished: 1
+	spam $: 9
+	spam bacon: 2
+	spam baked: 1
+	spam egg: 3
+Word pairs (by frequency):
+	spam spam: 11
+	spam $: 9
+	$ egg: 5
+	$ spam: 5
+	spam egg: 3
+	bacon $: 2
+	bacon sausage: 2
+	egg bacon: 2
+	egg sausage: 2
+	spam bacon: 2
+	$ lobster: 1
+	aux crevettes: 1
+	baked beans: 1
+	beans spam: 1
+	egg spam: 1
+	fried egg: 1
+	lobster thermidor: 1
+	mornay sauce: 1
+	pate brandy: 1
+	sauce garnished: 1
+Symbol pairs (alphabetical order):
+	ac: 6
+	ag: 4
+	ak: 1
+	am: 27
+	an: 2
+	ar: 1
+	at: 1
+	au: 6
+	ay: 1
+	ba: 7
+	be: 1
+	br: 1
+	bs: 1
+	ce: 1
+	co: 6
+	cr: 1
+	do: 1
+	dy: 1
+	ea: 1
+	ed: 3
+Symbol pairs (by frequency):
+	pa: 28
+	am: 27
+	sp: 27
+	eg: 9
+	gg: 9
+	sa: 9
+	ba: 7
+	ac: 6
+	au: 6
+	co: 6
+	on: 6
+	ag: 4
+	ge: 4
+	us: 4
+	ed: 3
+	te: 3
+	an: 2
+	er: 2
+	he: 2
+	or: 2

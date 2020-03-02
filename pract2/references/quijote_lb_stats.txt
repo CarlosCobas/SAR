@@ -1,0 +1,173 @@
+Lines: 37454
+Number words (including stopwords): 381223
+Vocabulary size: 22942
+Number of symbols: 1640627
+Number of different symbols: 43
+Words (alphabetical order):
+	10: 1
+	16: 1
+	1604: 1
+	1614: 1
+	1615: 1
+	17: 1
+	23: 1
+	a: 9824
+	abad: 5
+	abadejo: 2
+	abades: 1
+	abadesa: 2
+	abaja: 1
+	abajan: 1
+	abajarse: 2
+	abajen: 1
+	abajo: 41
+	abajó: 2
+	abalánzase: 1
+	abandonarme: 1
+Words (by frequency):
+	que: 20628
+	de: 18213
+	y: 18189
+	la: 10363
+	a: 9824
+	en: 8242
+	el: 8210
+	no: 6335
+	los: 4748
+	se: 4691
+	con: 4202
+	por: 3940
+	las: 3468
+	lo: 3461
+	le: 3398
+	su: 3352
+	don: 2647
+	del: 2491
+	me: 2345
+	como: 2264
+Symbols (alphabetical order):
+	0: 2
+	1: 8
+	2: 1
+	3: 1
+	4: 2
+	5: 1
+	6: 4
+	7: 1
+	a: 193346
+	b: 24147
+	c: 59436
+	d: 87237
+	e: 221980
+	f: 7581
+	g: 17225
+	h: 19920
+	i: 77616
+	j: 10530
+	l: 89141
+	m: 44658
+Symbols (by frequency):
+	e: 221980
+	a: 193346
+	o: 153361
+	s: 125727
+	n: 108441
+	r: 100954
+	l: 89141
+	d: 87237
+	u: 78193
+	i: 77616
+	t: 61749
+	c: 59436
+	m: 44658
+	p: 35465
+	q: 32483
+	y: 25115
+	b: 24147
+	h: 19920
+	v: 17855
+	g: 17225
+Word pairs (alphabetical order):
+	$ a: 452
+	$ abajarse: 1
+	$ abajo: 3
+	$ abajó: 1
+	$ abalánzase: 1
+	$ abejas: 2
+	$ aberenjenado: 1
+	$ abernuncio: 2
+	$ abierta: 1
+	$ abierto: 1
+	$ abiertos: 2
+	$ abismo: 1
+	$ abismos: 1
+	$ abomino: 1
+	$ aborrece: 1
+	$ aborrecido: 1
+	$ abran: 2
+	$ abrasada: 1
+	$ abrasar: 1
+	$ abrazada: 1
+Word pairs (by frequency):
+	de la: 2026
+	don quijote: 2007
+	lo que: 1482
+	de $: 1359
+	y $: 1351
+	que $: 1267
+	que no: 1235
+	$ que: 1214
+	la $: 969
+	$ y: 966
+	de los: 928
+	en el: 914
+	en la: 912
+	a la: 882
+	de su: 872
+	que se: 859
+	$ de: 820
+	a $: 670
+	el $: 662
+	que le: 644
+Symbol pairs (alphabetical order):
+	04: 1
+	10: 1
+	14: 1
+	15: 1
+	16: 4
+	17: 1
+	23: 1
+	60: 1
+	61: 2
+	aa: 10
+	ab: 10074
+	ac: 5075
+	ad: 12446
+	ae: 409
+	af: 275
+	ag: 1706
+	ah: 585
+	ai: 421
+	aj: 1059
+	al: 14749
+Symbol pairs (by frequency):
+	ue: 36959
+	de: 34057
+	en: 33678
+	es: 32642
+	qu: 32483
+	er: 27180
+	os: 25536
+	la: 23091
+	do: 21607
+	an: 21369
+	ra: 21043
+	as: 20604
+	on: 17942
+	ar: 17608
+	el: 17308
+	se: 16731
+	or: 15489
+	co: 15460
+	re: 15424
+	te: 15294

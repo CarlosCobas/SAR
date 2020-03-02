@@ -1,0 +1,302 @@
+Lines: 11
+Number words (including stopwords): 77
+Number words (without stopwords): 60
+Vocabulary size: 20
+Number of symbols: 276
+Number of different symbols: 28
+Words (alphabetical order):
+	Bacon: 6
+	Egg: 8
+	Lobster: 1
+	Mornay: 1
+	Sausage: 1
+	Spam: 27
+	Thermidor: 1
+	aux: 1
+	baked: 1
+	beans: 1
+	brandy: 1
+	crevettes: 1
+	egg: 1
+	fried: 1
+	garnished: 1
+	pate: 1
+	sauce: 1
+	sausage: 3
+	top: 1
+	truffle: 1
+Words (by frequency):
+	Spam: 27
+	Egg: 8
+	Bacon: 6
+	sausage: 3
+	Lobster: 1
+	Mornay: 1
+	Sausage: 1
+	Thermidor: 1
+	aux: 1
+	baked: 1
+	beans: 1
+	brandy: 1
+	crevettes: 1
+	egg: 1
+	fried: 1
+	garnished: 1
+	pate: 1
+	sauce: 1
+	top: 1
+	truffle: 1
+Symbols (alphabetical order):
+	B: 6
+	E: 8
+	L: 1
+	M: 1
+	S: 28
+	T: 1
+	a: 49
+	b: 4
+	c: 8
+	d: 5
+	e: 17
+	f: 3
+	g: 23
+	h: 2
+	i: 3
+	k: 1
+	l: 1
+	m: 28
+	n: 10
+	o: 10
+	p: 29
+	r: 9
+	s: 12
+	t: 6
+	u: 7
+	v: 1
+	x: 1
+	y: 2
+Symbols (by frequency):
+	a: 49
+	p: 29
+	S: 28
+	m: 28
+	g: 23
+	e: 17
+	s: 12
+	n: 10
+	o: 10
+	r: 9
+	E: 8
+	c: 8
+	u: 7
+	B: 6
+	t: 6
+	d: 5
+	b: 4
+	f: 3
+	i: 3
+	h: 2
+	y: 2
+	L: 1
+	M: 1
+	T: 1
+	k: 1
+	l: 1
+	v: 1
+	x: 1
+Word pairs (alphabetical order):
+	$ Egg: 5
+	$ Lobster: 1
+	$ Spam: 5
+	Bacon $: 2
+	Bacon sausage: 2
+	Egg Bacon: 2
+	Egg Sausage: 1
+	Egg Spam: 1
+	Egg sausage: 1
+	Lobster Thermidor: 1
+	Mornay sauce: 1
+	Spam $: 9
+	Spam Bacon: 2
+	Spam Egg: 3
+	Spam Spam: 11
+	Spam baked: 1
+	Thermidor aux: 1
+	aux crevettes: 1
+	baked beans: 1
+	beans Spam: 1
+	fried egg: 1
+	pate brandy: 1
+	sauce garnished: 1
+	truffle pate: 1
+Word pairs (by frequency):
+	Spam Spam: 11
+	Spam $: 9
+	$ Egg: 5
+	$ Spam: 5
+	Spam Egg: 3
+	Bacon $: 2
+	Bacon sausage: 2
+	Egg Bacon: 2
+	Spam Bacon: 2
+	$ Lobster: 1
+	Egg Sausage: 1
+	Egg Spam: 1
+	Egg sausage: 1
+	Lobster Thermidor: 1
+	Mornay sauce: 1
+	Spam baked: 1
+	Thermidor aux: 1
+	aux crevettes: 1
+	baked beans: 1
+	beans Spam: 1
+	fried egg: 1
+	pate brandy: 1
+	sauce garnished: 1
+	truffle pate: 1
+Symbol pairs (alphabetical order):
+	Ba: 6
+	Eg: 8
+	Lo: 1
+	Mo: 1
+	Sa: 1
+	Sp: 27
+	Th: 1
+	ac: 6
+	ag: 4
+	ak: 1
+	am: 27
+	an: 2
+	ar: 1
+	at: 1
+	au: 6
+	ay: 1
+	ba: 1
+	be: 1
+	br: 1
+	bs: 1
+	ce: 1
+	co: 6
+	cr: 1
+	do: 1
+	dy: 1
+	ea: 1
+	ed: 3
+	eg: 1
+	er: 2
+	es: 1
+	et: 1
+	ev: 1
+	ff: 1
+	fl: 1
+	fr: 1
+	ga: 1
+	ge: 4
+	gg: 9
+	he: 2
+	id: 1
+	ie: 1
+	is: 1
+	ke: 1
+	le: 1
+	mi: 1
+	na: 1
+	nd: 1
+	ni: 1
+	ns: 1
+	ob: 1
+	on: 6
+	op: 1
+	or: 2
+	pa: 28
+	ra: 1
+	re: 1
+	ri: 1
+	rm: 1
+	rn: 2
+	ru: 1
+	sa: 8
+	sh: 1
+	st: 1
+	te: 3
+	to: 1
+	tr: 1
+	tt: 1
+	uc: 1
+	uf: 1
+	us: 4
+	ux: 1
+	ve: 1
+Symbol pairs (by frequency):
+	pa: 28
+	Sp: 27
+	am: 27
+	gg: 9
+	Eg: 8
+	sa: 8
+	Ba: 6
+	ac: 6
+	au: 6
+	co: 6
+	on: 6
+	ag: 4
+	ge: 4
+	us: 4
+	ed: 3
+	te: 3
+	an: 2
+	er: 2
+	he: 2
+	or: 2
+	rn: 2
+	Lo: 1
+	Mo: 1
+	Sa: 1
+	Th: 1
+	ak: 1
+	ar: 1
+	at: 1
+	ay: 1
+	ba: 1
+	be: 1
+	br: 1
+	bs: 1
+	ce: 1
+	cr: 1
+	do: 1
+	dy: 1
+	ea: 1
+	eg: 1
+	es: 1
+	et: 1
+	ev: 1
+	ff: 1
+	fl: 1
+	fr: 1
+	ga: 1
+	id: 1
+	ie: 1
+	is: 1
+	ke: 1
+	le: 1
+	mi: 1
+	na: 1
+	nd: 1
+	ni: 1
+	ns: 1
+	ob: 1
+	op: 1
+	ra: 1
+	re: 1
+	ri: 1
+	rm: 1
+	ru: 1
+	sh: 1
+	st: 1
+	to: 1
+	tr: 1
+	tt: 1
+	uc: 1
+	uf: 1
+	ux: 1
+	ve: 1
