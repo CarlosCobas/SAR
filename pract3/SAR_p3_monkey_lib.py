@@ -28,11 +28,22 @@ def sort_index(d):
 class Monkey():
 
     def __init__(self):
-        self.r1 = re.compile('[.;?!]|(\n\n)')
+        self.r1 = re.compile('[.;?!]')
         self.r2 = re.compile('\W+')
 
 
     def index_sentence(self, sentence, tri):
+
+        """
+        Este método tokeniza la frase proporcionada y saca las estadisticas
+            
+
+        :param 
+            sentence: frase a tokenizar.
+            tri: bool si incluir trigramas
+
+        :return: None
+        """
 
         sentence = self.r2.sub(" ", sentence)
         sentence = sentence.lower()
@@ -46,18 +57,13 @@ class Monkey():
 
         if tri:
 
-            for i in range(0, len(sentence) - 2):
+            for i in range(0, len(sentence) - 2):      
+
+                bigram = (sentence[i], sentence[i+1])
+                self.index['tri'][bigram] = self.index['tri'].get(bigram, {})
+                w = sentence[i+2]
+                self.index['tri'][bigram][w] = self.index['tri'][bigram].get(w, 0) + 1
                 
-                self.index['tri'][sentence[i]] = self.index['tri'].get(sentence[i], {})
-                w1 = sentence[i+1]
-                w2 = sentence[i+2]
-
-                self.index['tri'][sentence[i]][(w1,w2)] = self.index['tri'][sentence[i]].get((w1,w2), 0) + 1
-                
-
-
-        
-    
 
 
     def compute_index(self, filename, tri):
@@ -76,18 +82,16 @@ class Monkey():
         if tri:
             self.index["tri"] = {}
 
-        raw_sentence = ""
+        
         
         fh = open(filename)
 
-        for line in fh:
-            matches = self.r1.match(line)
-            groups = matches.groups()
+        file = fh.read()
+        file.replace('\n\n', '.')
+        splitted_file = self.r1.split(file)
 
-            for i in range(0, len(groups) - 1):
-                self.index_sentence(groups[i], tri)
-            
-            raw_sentence += groups[len(groups) - 1]
+        for line in splitted_file:
+            self.index_sentence(line, tri)
 
         fh.close()
 
@@ -130,10 +134,74 @@ class Monkey():
 
 
     def generate_sentences(self, n=10):
-        #############
-        # COMPLETAR #
-        #############
-        pass
+
+        for i in range(0, n):
+
+            sentence = ''
+            generated_word = ''
+            
+
+            if(self.index.get('tri', False)):
+
+                list_of_posible_starts = self.index['bi']['$']
+
+                sentence_as_list = []
+
+                generated_word = self.get_random_word(list_of_posible_starts)
+
+                sentence_as_list.append(generated_word)
+
+                generated_word = self.get_random_word(self.index['bi'][generated_word])
+
+                sentence_as_list.append(generated_word)
+
+                for j in range(1, 25):
+
+                    list_of_posible_words = self.index['tri'][(sentence_as_list[j - 1], sentence_as_list[j])]
+                    generated_word = self.get_random_word(list_of_posible_words)
+
+                    if(generated_word == '$'):
+                        break
+                    else:
+                         sentence_as_list.append(generated_word)
+
+                sentence = " ".join(sentence_as_list)
+
+            else:
+                list_of_posible_starts = self.index['bi']['$']
+
+                generated_word = self.get_random_word(list_of_posible_starts)
+                
+                sentence += generated_word
+
+                for j in range(0, 25):
+
+                    list_of_posible_words = self.index['bi'][generated_word]
+                    generated_word = self.get_random_word(list_of_posible_words)
+
+                    if(generated_word == '$'):
+                        break
+                    else:
+                        sentence += ' ' + generated_word
+
+            print(sentence)
+            print('--------')
+
+
+
+
+    def get_random_word(self, posible_words):
+        
+        words_list = []
+        
+        posible_words_list = posible_words[1]
+        ## Append elemnts repeated by frecuency to list
+        for posible_word in posible_words_list:
+            for i in range(0, posible_word[0]):
+                words_list.append(posible_word[1]);
+
+        random_number = random.randint(0, posible_words[0] - 1)
+        return words_list[random_number]
 
 
 if __name__ == "__main__":
