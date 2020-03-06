@@ -43,6 +43,16 @@ class Monkey():
             self.index['bi'][sentence[i]] = self.index['bi'].get(sentence[i], {})
             next_word = sentence[i+1]
             self.index['bi'][sentence[i]][next_word] = self.index['bi'][sentence[i]].get(next_word, 0) + 1
+
+        if tri:
+
+            for i in range(0, len(sentence) - 2):
+                
+                self.index['tri'][sentence[i]] = self.index['tri'].get(sentence[i], {})
+                w1 = sentence[i+1]
+                w2 = sentence[i+1]
+
+                self.index['tri'][sentence[i]][(w1,w2)] = self.index['tri'][sentence[i]].get((w1,w2), 0) + 1
                 
 
 
