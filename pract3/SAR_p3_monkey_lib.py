@@ -50,7 +50,7 @@ class Monkey():
                 
                 self.index['tri'][sentence[i]] = self.index['tri'].get(sentence[i], {})
                 w1 = sentence[i+1]
-                w2 = sentence[i+1]
+                w2 = sentence[i+2]
 
                 self.index['tri'][sentence[i]][(w1,w2)] = self.index['tri'][sentence[i]].get((w1,w2), 0) + 1
                 
