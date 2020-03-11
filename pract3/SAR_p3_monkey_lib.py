@@ -7,7 +7,8 @@ import random
 import re
 import sys
 
-## Nombres: 
+## Nombres: Carlos Enrique Pérez Cobas
+##          Steven Alejandro Valencia Bonilla            
 
 ########################################################################
 ########################################################################
@@ -35,7 +36,7 @@ class Monkey():
     def index_sentence(self, sentence, tri):
 
         """
-        Este método tokeniza la frase proporcionada y saca las estadisticas
+        Este método tokeniza la frase proporcionada y saca las estadísticas correspondientes.
             
 
         :param 
@@ -68,7 +69,7 @@ class Monkey():
 
     def compute_index(self, filename, tri):
         """
-        Este método separa el fichero en frases para procesar y generar indices
+        Este método separa el fichero en frases para procesar y generar índices.
             
 
         :param 
@@ -134,7 +135,17 @@ class Monkey():
 
 
     def generate_sentences(self, n=10):
+        """
+        Este método recibe un número (10 predeterminadamente) 
+        y genera ese número de frases de manera aleatoria a partir de las 
+        palabras obtenidas de los índices.
+            
 
+        :param 
+            n=10: Número de frases que generará.
+
+        :return: None
+        """
         for i in range(0, n):
 
             sentence = ''
@@ -191,14 +202,24 @@ class Monkey():
 
 
     def get_random_word(self, posible_words):
-        
+        """
+        Este método recibe una lista de palabras posibles y devuelve
+        una palabra aleatoria de dicha lista.
+            
+        :param 
+            posible_words: El nombre del fichero.
+
+
+        :return
+            words_list[random_number]: Palabra aleatoria.
+        """        
         words_list = []
         
         posible_words_list = posible_words[1]
         ## Append elemnts repeated by frecuency to list
         for posible_word in posible_words_list:
             for i in range(0, posible_word[0]):
-                words_list.append(posible_word[1]);
+                words_list.append(posible_word[1])
 
         random_number = random.randint(0, posible_words[0] - 1)
         return words_list[random_number]
