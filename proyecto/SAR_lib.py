@@ -533,7 +533,7 @@ class SAR_Project:
 
         return res
 
-
+    #TODO: revisar porque falla cuando lo uso (El and not queria hacerlo con este metodo pero falla)
     def minus_posting(self, p1, p2):
         """
         OPCIONAL PARA TODAS LAS VERSIONES
