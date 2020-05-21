@@ -306,9 +306,52 @@ class SAR_Project:
         if query is None or len(query) == 0:
             return []
 
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
+        connections = ['AND', 'OR', 'NOT']
+        query_as_list = query.split()
+        postings_query_terms = {}
+
+        #One word query
+        if len(query_as_list) == 1 and query_as_list[0] not in connections:
+            return self.get_posting(query_as_list[0])
+        
+        term_pos = 0
+        for term in query_as_list:
+            if term not in connections:
+                pl = self.get_posting(term)
+                postings_query_terms[term_pos] = pl
+            term_pos = term_pos +1
+
+        x = 0
+
+        working_res = [];
+
+        while x < len(query_as_list) - 1:
+
+            if query_as_list[x] == 'NOT':
+                postings_query_terms[x+1] = self.reverse_posting(postings_query_terms.get(x+1))
+
+            elif query_as_list[x] == 'AND':
+                prev_term_posting = postings_query_terms.get(x-1)
+                if query_as_list[x+1] == 'NOT':
+                    second_term_posting = self.reverse_posting(postings_query_terms.get(x+2))
+                    postings_query_terms[x+2] = self.and_posting(prev_term_posting, second_term_posting)
+                    x = x+1 #Avanzo para no repetir el NOT
+                else:
+                    postings_query_terms[x+1] = self.and_posting(prev_term_posting, postings_query_terms.get(x+1))
+
+            elif query_as_list[x] == 'OR':
+                prev_term_posting = postings_query_terms.get(x-1)
+                if query_as_list[x+1] == 'NOT':
+                    second_term_posting = self.reverse_posting(postings_query_terms.get(x+2))
+                    postings_query_terms[x+2] = self.or_posting(prev_term_posting, second_term_posting)
+                    x = x+1 #Avanzo para no repetir el NOT
+                else:
+                    postings_query_terms[x+1] = self.or_posting(prev_term_posting, postings_query_terms.get(x+1))
+
+                 
+            x = x+1 
+
+        return postings_query_terms[len(query_as_list) - 1]
 
     def get_posting(self, term, field='article'):
         """
@@ -327,7 +370,8 @@ class SAR_Project:
         return: posting list
 
         """
-        return 
+        res = list(self.index.get(term).keys())
+        return res
 
     def get_positionals(self, terms, field='article'):
         """
@@ -397,19 +441,21 @@ class SAR_Project:
 
         """
 
-        res = self.news.keys()
+        full_list = list(self.news.keys())
+        res = []
         x = y = 0
+
         
-        while x < len(res) and y < len(p):
-            if res[x] == p[y]:
+        while x < len(full_list) and y < len(p):
+            if full_list[x] == p[y]:
                 x = x + 1
                 y = y + 1
             else:
-                res.append(res[x])
+                res.append(full_list[x])
                 x = x + 1
 
-        while x  < len(res):
-            res.append(res[x])
+        while x  < len(full_list):
+            res.append(full_list[x])
             x = x + 1
         
         return res
@@ -474,7 +520,7 @@ class SAR_Project:
                     res.append(p2[y])
                     y= y + 1
                 else:
-                    res.append(p2[x])
+                    res.append(p1[x])
                     x= x + 1
 
         while x < len(p1):
