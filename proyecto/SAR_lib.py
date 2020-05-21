@@ -214,7 +214,6 @@ class SAR_Project:
         news_dic = index.get(term, None)
 
         if news_dic is None:
-            # permuterm_indexer(term, index_permuterm)
             index[term] = {new_id: [pos]}
 
         else:
@@ -263,9 +262,12 @@ class SAR_Project:
 
         """
         pass
-        ####################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
-        ####################################################
+
+    def get_permuterm(self, term):
+        terms = []
+
+        for i in range(len(term)):
+            terms.append(term[:i] + '$' + term[i:])
 
     def show_stats(self):
         """
