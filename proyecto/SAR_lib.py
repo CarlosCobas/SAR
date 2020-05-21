@@ -327,10 +327,7 @@ class SAR_Project:
         return: posting list
 
         """
-        pass
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
+        return 
 
     def get_positionals(self, terms, field='article'):
         """
@@ -400,10 +397,23 @@ class SAR_Project:
 
         """
 
-        pass
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
+        res = self.news.keys()
+        x = y = 0
+        
+        while x < len(res) and y < len(p):
+            if res[x] == p[y]:
+                x = x + 1
+                y = y + 1
+            else:
+                res.append(res[x])
+                x = x + 1
+
+        while x  < len(res):
+            res.append(res[x])
+            x = x + 1
+        
+        return res
+        
 
     def and_posting(self, p1, p2):
         """
@@ -417,11 +427,23 @@ class SAR_Project:
         return: posting list con los newid incluidos en p1 y p2
 
         """
+        if len(p1) == 0 or len(p2) == 0:
+            return []
+        
+        res = []
+        x = y = 0
 
-        pass
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
+        while x < len(p1) and y < len(p2):
+            if p1[x] == p2[y]:
+                res.append(p1[x])
+                x = x + 1
+                y = y + 1
+            else:
+                if p1[x] < p2[y]:
+                    x = x + 1
+                else:
+                    y = y + 1
+        return res
 
     def or_posting(self, p1, p2):
         """
@@ -436,10 +458,35 @@ class SAR_Project:
 
         """
 
-        pass
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
+        if len(p1) == 0 and len(p2) == 0:
+            return []
+        
+        res = []
+        x = y = 0
+
+        while x < len(p1) and y < len(p2):
+            if p1[x] == p2[y]:
+                res.append(p1[x])
+                x = x + 1
+                y = y + 1
+            else:
+                if p1[x] > p2[y]:
+                    res.append(p2[y])
+                    y= y + 1
+                else:
+                    res.append(p2[x])
+                    x= x + 1
+
+        while x < len(p1):
+            res.append(p1[x])
+            x = x + 1
+        
+        while y < len(p2):
+            res.append(p2[y])
+            y = y + 1
+
+        return res
+
 
     def minus_posting(self, p1, p2):
         """
@@ -454,11 +501,25 @@ class SAR_Project:
         return: posting list con los newid incluidos de p1 y no en p2
 
         """
+        if len(p1) == 0:
+            return []
 
-        pass
-        ########################################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
-        ########################################################
+        res = []
+        x = y = 0
+
+        while x < len(p1) and y < len(p2):
+            if p1[x] == p2[y]:
+                x = x + 1
+                y = y + 1
+            else:
+                res.append(p1[x])
+                x = x + 1
+
+        while x  < len(p1):
+            res.append(p1[x])
+            x = x + 1
+        
+        return res
 
     #####################################
     ###                               ###
