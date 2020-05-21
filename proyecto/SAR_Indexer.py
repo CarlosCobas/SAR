@@ -2,7 +2,8 @@ import argparse
 import pickle
 import time
 
-from SAR_lib import SAR_Project
+from proyecto.SAR_lib import SAR_Project
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Index a directory with news in json format.')

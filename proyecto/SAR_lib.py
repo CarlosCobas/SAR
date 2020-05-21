@@ -1,3 +1,4 @@
+import bisect
 import json
 from nltk.stem.snowball import SnowballStemmer
 import os
@@ -239,7 +240,7 @@ class SAR_Project:
         """
         return self.tokenizer.sub(' ', text.lower()).split()
 
-    def make_stemming(self):
+    def make_stemming(self):  # TODO: Check if it works
         """
         NECESARIO PARA LA AMPLIACION DE STEMMING.
 
@@ -248,26 +249,67 @@ class SAR_Project:
         self.stemmer.stem(token) devuelve el stem del token
 
         """
+        if self.multifield:
+            for field in [f for f, t in SAR_Project.fields if t is True]:
+                self.sindex[field] = {}
 
-        pass
-        ####################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
-        ####################################################
+                inv_index = self.index[field]
 
-    def make_permuterm(self):
+                for term, _ in inv_index:
+                    stem = self.stemmer.stem(term)
+
+                    if stem not in self.sindex[field]:
+                        self.sindex[field][stem] = []
+
+                    else:
+                        self.sindex[field][stem].append(term)
+
+        else:
+            self.sindex = {}
+
+            for term, _ in self.index:
+                stem = self.stemmer.stem(term)
+
+                if stem not in self.sindex:
+                    self.sindex[stem] = []
+
+                else:
+                    self.sindex[stem].append(term)
+
+    def make_permuterm(self):  # TODO: Check if it works
         """
         NECESARIO PARA LA AMPLIACION DE PERMUTERM
 
         Crea el indice permuterm (self.ptindex) para los terminos de todos los indices.
 
         """
-        pass
+        if self.multifield:
+            self.ptindex = {}
 
-    def get_permuterm(self, term):
-        terms = []
+            for field in [f for f, t in SAR_Project.fields if t is True]:
+                self.ptindex[field] = []
 
-        for i in range(len(term)):
-            terms.append(term[:i] + '$' + term[i:])
+                inv_index = self.index[field]
+
+                for term, _ in inv_index:
+                    permuterms = self.permuterm(term)
+
+                    for p in permuterms:
+                        bisect.insort_left(self.ptindex[field], p)
+
+        else:
+            self.ptindex = []
+
+            for term, _ in self.index:
+                permuterms = self.permuterm(term)
+
+                for p in permuterms:
+                    bisect.insort_left(self.ptindex, p)
+
+    def permuterm(self, term):
+        term += '$'
+
+        return [term[i:] + term[:i] for i in range(len(term))]
 
     def show_stats(self):
         """
@@ -310,7 +352,7 @@ class SAR_Project:
         query_as_list = query.split()
         postings_query_terms = {}
 
-        #One word query
+        # One word query
         if len(query_as_list) == 1 and query_as_list[0] not in connections:
             return self.get_posting(query_as_list[0])
         
@@ -319,11 +361,12 @@ class SAR_Project:
             if term not in connections:
                 pl = self.get_posting(term)
                 postings_query_terms[term_pos] = pl
-            term_pos = term_pos +1
+
+            term_pos += 1
 
         x = 0
 
-        working_res = [];
+        working_res = []
 
         while x < len(query_as_list) - 1:
 
@@ -332,24 +375,27 @@ class SAR_Project:
 
             elif query_as_list[x] == 'AND':
                 prev_term_posting = postings_query_terms.get(x-1)
+
                 if query_as_list[x+1] == 'NOT':
                     second_term_posting = self.reverse_posting(postings_query_terms.get(x+2))
                     postings_query_terms[x+2] = self.and_posting(prev_term_posting, second_term_posting)
-                    x = x+1 #Avanzo para no repetir el NOT
+                    x += 1  # Avanzo para no repetir el NOT
+
                 else:
                     postings_query_terms[x+1] = self.and_posting(prev_term_posting, postings_query_terms.get(x+1))
 
             elif query_as_list[x] == 'OR':
                 prev_term_posting = postings_query_terms.get(x-1)
+
                 if query_as_list[x+1] == 'NOT':
                     second_term_posting = self.reverse_posting(postings_query_terms.get(x+2))
                     postings_query_terms[x+2] = self.or_posting(prev_term_posting, second_term_posting)
-                    x = x+1 #Avanzo para no repetir el NOT
+                    x += 1  # Avanzo para no repetir el NOT
+
                 else:
                     postings_query_terms[x+1] = self.or_posting(prev_term_posting, postings_query_terms.get(x+1))
 
-                 
-            x = x+1 
+            x += 1
 
         return postings_query_terms[len(query_as_list) - 1]
 
@@ -371,6 +417,7 @@ class SAR_Project:
 
         """
         res = list(self.index.get(term).keys())
+
         return res
 
     def get_positionals(self, terms, field='article'):
@@ -444,22 +491,21 @@ class SAR_Project:
         full_list = list(self.news.keys())
         res = []
         x = y = 0
-
         
         while x < len(full_list) and y < len(p):
             if full_list[x] == p[y]:
                 x = x + 1
                 y = y + 1
+
             else:
                 res.append(full_list[x])
                 x = x + 1
 
-        while x  < len(full_list):
+        while x < len(full_list):
             res.append(full_list[x])
             x = x + 1
         
         return res
-        
 
     def and_posting(self, p1, p2):
         """
@@ -484,11 +530,14 @@ class SAR_Project:
                 res.append(p1[x])
                 x = x + 1
                 y = y + 1
+
             else:
                 if p1[x] < p2[y]:
                     x = x + 1
+
                 else:
                     y = y + 1
+
         return res
 
     def or_posting(self, p1, p2):
@@ -513,27 +562,29 @@ class SAR_Project:
         while x < len(p1) and y < len(p2):
             if p1[x] == p2[y]:
                 res.append(p1[x])
-                x = x + 1
-                y = y + 1
+                x += 1
+                y += 1
+
             else:
                 if p1[x] > p2[y]:
                     res.append(p2[y])
-                    y= y + 1
+                    y += 1
+
                 else:
                     res.append(p1[x])
-                    x= x + 1
+                    x += 1
 
         while x < len(p1):
             res.append(p1[x])
-            x = x + 1
+            x += 1
         
         while y < len(p2):
             res.append(p2[y])
-            y = y + 1
+            y += 1
 
         return res
 
-    #TODO: revisar porque falla cuando lo uso (El and not queria hacerlo con este metodo pero falla)
+    # TODO: revisar porque falla cuando lo uso (El and not queria hacerlo con este metodo pero falla)
     def minus_posting(self, p1, p2):
         """
         OPCIONAL PARA TODAS LAS VERSIONES
@@ -555,15 +606,16 @@ class SAR_Project:
 
         while x < len(p1) and y < len(p2):
             if p1[x] == p2[y]:
-                x = x + 1
-                y = y + 1
+                x += 1
+                y += 1
+
             else:
                 res.append(p1[x])
-                x = x + 1
+                x += 1
 
-        while x  < len(p1):
+        while x < len(p1):
             res.append(p1[x])
-            x = x + 1
+            x += 1
         
         return res
 
@@ -604,10 +656,11 @@ class SAR_Project:
 
         """
         result = self.solve_query(query)
+
         if self.use_ranking:
             result = self.rank_result(result, query)
 
-            ########################################
+        ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
 
