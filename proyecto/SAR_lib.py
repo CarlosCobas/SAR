@@ -416,6 +416,10 @@ class SAR_Project:
         return: posting list
 
         """
+
+        if('*' in term or '?' in term):
+            term = self.get_permuterm(term)
+            
         res = list(self.index.get(term).keys())
 
         return res
@@ -468,7 +472,7 @@ class SAR_Project:
         return: posting list
 
         """
-
+        return []
         ##################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
         ##################################################
@@ -677,7 +681,6 @@ class SAR_Project:
         return: la lista de resultados ordenada
 
         """
-
         pass
 
         ###################################################

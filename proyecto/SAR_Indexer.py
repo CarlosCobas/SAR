@@ -2,7 +2,7 @@ import argparse
 import pickle
 import time
 
-from proyecto.SAR_lib import SAR_Project
+from SAR_lib import SAR_Project
 
 
 if __name__ == "__main__":
