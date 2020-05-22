@@ -664,9 +664,14 @@ class SAR_Project:
         if self.use_ranking:
             result = self.rank_result(result, query)
 
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
+        for news in result:
+            
+
+        print("=================================================\n")
+        print("Query: %s" % query)    
+        print("Result: %d" % len(result))    
+        print("=================================================\n")
+
 
     def rank_result(self, result, query):
         """
