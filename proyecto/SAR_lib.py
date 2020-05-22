@@ -292,7 +292,7 @@ class SAR_Project:
                 inv_index = self.index[field]
 
                 for term, _ in inv_index:
-                    permuterms = self.get_permuterm(term)
+                    permuterms = self.generate_permuterms(term)
 
                     for p in permuterms:
                         bisect.insort_left(self.ptindex[field], p)
@@ -301,12 +301,12 @@ class SAR_Project:
             self.ptindex = []
 
             for term, _ in self.index:
-                permuterms = self.get_permuterm(term)
+                permuterms = self.generate_permuterms(term)
 
                 for p in permuterms:
                     bisect.insort_left(self.ptindex, p)
 
-    def get_permuterm(self, term):
+    def generate_permuterms(self, term):
         term += '$'
 
         return [term[i:] + term[:i] for i in range(len(term))]
