@@ -211,8 +211,8 @@ class SAR_Project:
 
             self.new_id += 1
 
-    def index_term(self, term, new_id, pos, field=None):
-        index = self.index if field is None else self.index[field]
+    def index_term(self, term, new_id, pos, field='article'):
+        index = self.index if field == 'article' else self.index[field]
 
         news_dic = index.get(term, None)
 
@@ -301,7 +301,7 @@ class SAR_Project:
                     permuterms = self.generate_permuterms(term)
 
                     for p in permuterms:
-                        bisect.insort_left(self.ptindex[field], p)
+                        bisect.insort_left(self.ptindex[field], (p, term))
 
         else:
             self.ptindex = []
@@ -310,7 +310,7 @@ class SAR_Project:
                 permuterms = self.generate_permuterms(term)
 
                 for p in permuterms:
-                    bisect.insort_left(self.ptindex, p)
+                    bisect.insort_left(self.ptindex, (p, term))
 
     def generate_permuterms(self, term):
         term += '$'
@@ -422,11 +422,15 @@ class SAR_Project:
         return: posting list
 
         """
+        index = self.index if field == 'article' else self.index[field]
 
-        if('*' in term or '?' in term):
-            term = self.get_permuterm(term)
+        if '*' in term or '?' in term:
+            return self.get_permuterm(term)
+
+        elif self.stemming:
+            return self.get_stemming(term, field)
             
-        res = list(self.index.get(term).keys())
+        res = list(index.get(term).keys())
 
         return res
 
@@ -447,7 +451,7 @@ class SAR_Project:
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE POSICIONALES ##
         ########################################################
 
-    def get_stemming(self, term, field='article'):
+    def get_stemming(self, term, field='article'):  # TODO: Check if it works
         """
         NECESARIO PARA LA AMPLIACION DE STEMMING
 
@@ -459,14 +463,13 @@ class SAR_Project:
         return: posting list
 
         """
+        index = self.index if field == 'article' else self.index[field]
 
         stem = self.stemmer.stem(term)
 
-        ####################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
-        ####################################################
+        return [index[t][:] for t in self.sindex[stem]]
 
-    def get_permuterm(self, term, field='article'):
+    def get_permuterm(self, term, field='article'):  # TODO: Check if it works
         """
         NECESARIO PARA LA AMPLIACION DE PERMUTERM
 
@@ -478,10 +481,26 @@ class SAR_Project:
         return: posting list
 
         """
-        return []
-        ##################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
-        ##################################################
+        index = self.index if field == 'article' else self.index[field]
+
+        if '*' in term:
+            p1, p2 = term.split('*')
+
+            query = p2 + '$' + p1
+
+            terms = [t for p, t in self.ptindex[field] if t.startswith(query)]
+
+            return [index[t][:] for t in terms]
+
+        else:
+            p1, p2 = term.split('?')
+
+            query = p2 + '$' + p1
+            q_len = len(query)
+
+            terms = [t for p, t in self.ptindex[field] if t.startswith(query) and len(t) - q_len <= 1]
+
+            return [index[t][:] for t in terms]
 
     def reverse_posting(self, p):
         """
@@ -594,7 +613,7 @@ class SAR_Project:
 
         return res
 
-    # TODO: revisar porque falla cuando lo uso (El and not queria hacerlo con este metodo pero falla)
+    # TODO: revisar porque falla cuando lo uso (El and not queria hacerlo con este metodo pero falla) // Check if it works
     def minus_posting(self, p1, p2):
         """
         OPCIONAL PARA TODAS LAS VERSIONES
@@ -607,7 +626,9 @@ class SAR_Project:
 
         return: posting list con los newid incluidos de p1 y no en p2
 
-        """ 
+        """
+        return [x for x in p1 if x not in p2]
+
         if len(p1) == 0:
             return []
 
