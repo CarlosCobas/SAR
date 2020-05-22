@@ -670,8 +670,8 @@ class SAR_Project:
         if self.use_ranking:
             result = self.rank_result(result, query)
 
-        for news in result:
-            
+        # for news in result:
+
 
         print("=================================================\n")
         print("Query: %s" % query)    
