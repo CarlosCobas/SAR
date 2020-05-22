@@ -261,7 +261,7 @@ class SAR_Project:
 
                 inv_index = self.index[field]
 
-                for term, _ in inv_index:
+                for term in inv_index.keys():
                     stem = self.stemmer.stem(term)
 
                     if stem not in self.sindex[field]:
@@ -273,7 +273,7 @@ class SAR_Project:
         else:
             self.sindex = {}
 
-            for term, _ in self.index:
+            for term in self.index.keys():
                 stem = self.stemmer.stem(term)
 
                 if stem not in self.sindex:
@@ -282,7 +282,7 @@ class SAR_Project:
                 else:
                     self.sindex[stem].append(term)
 
-    def make_permuterm(self):  # TODO: Check if it works
+    def make_permuterm(self):
         """
         NECESARIO PARA LA AMPLIACION DE PERMUTERM
 
