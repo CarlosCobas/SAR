@@ -142,9 +142,11 @@ class SAR_Project:
 
                     self.index_file(fullname)
 
-        ##########################################
-        ## COMPLETAR PARA FUNCIONALIDADES EXTRA ##
-        ##########################################
+        if self.stemming:
+            self.make_stemming()
+
+        if self.permuterm:
+            self.make_permuterm()
 
     def index_file(self, filename):
         """
@@ -200,9 +202,9 @@ class SAR_Project:
             else:
                 content = self.tokenize(new['article'])
 
-                for term in content:
-                    term_pos = 0
+                term_pos = 0
 
+                for term in content:
                     self.index_term(term, self.new_id, term_pos)
 
                     term_pos += 1
@@ -215,16 +217,20 @@ class SAR_Project:
         news_dic = index.get(term, None)
 
         if news_dic is None:
-            index[term] = {new_id: [pos]}
+            index[term] = {new_id: [pos]} if self.positional else [new_id]
 
         else:
-            if new_id in news_dic.keys():
-                news_dic[new_id].append(pos)
+            if self.positional:
+                if new_id in news_dic.keys():
+                    news_dic[new_id].append(pos)
+
+                else:
+                    news_dic[new_id] = [pos]
+
+                index[term] = news_dic
 
             else:
-                news_dic[new_id] = [pos]
-
-            index[term] = news_dic
+                index[term].append(new_id)
 
     def tokenize(self, text):
         """
@@ -291,7 +297,7 @@ class SAR_Project:
 
                 inv_index = self.index[field]
 
-                for term, _ in inv_index:
+                for term in inv_index.keys():
                     permuterms = self.generate_permuterms(term)
 
                     for p in permuterms:
@@ -300,7 +306,7 @@ class SAR_Project:
         else:
             self.ptindex = []
 
-            for term, _ in self.index:
+            for term in self.index.keys():
                 permuterms = self.generate_permuterms(term)
 
                 for p in permuterms:
