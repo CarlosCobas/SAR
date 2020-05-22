@@ -292,7 +292,7 @@ class SAR_Project:
                 inv_index = self.index[field]
 
                 for term, _ in inv_index:
-                    permuterms = self.permuterm(term)
+                    permuterms = self.get_permuterm(term)
 
                     for p in permuterms:
                         bisect.insort_left(self.ptindex[field], p)
@@ -301,12 +301,12 @@ class SAR_Project:
             self.ptindex = []
 
             for term, _ in self.index:
-                permuterms = self.permuterm(term)
+                permuterms = self.get_permuterm(term)
 
                 for p in permuterms:
                     bisect.insort_left(self.ptindex, p)
 
-    def permuterm(self, term):
+    def get_permuterm(self, term):
         term += '$'
 
         return [term[i:] + term[:i] for i in range(len(term))]
@@ -597,7 +597,7 @@ class SAR_Project:
 
         return: posting list con los newid incluidos de p1 y no en p2
 
-        """
+        """ 
         if len(p1) == 0:
             return []
 
