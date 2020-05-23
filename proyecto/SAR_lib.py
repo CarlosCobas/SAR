@@ -26,6 +26,8 @@ class SAR_Project:
     # numero maximo de documento a mostrar cuando self.show_all es False
     SHOW_MAX = 10
 
+    
+
     def __init__(self):
         """
         Constructor de la classe SAR_Indexer.
@@ -37,7 +39,7 @@ class SAR_Project:
         """
         self.index = {}  # hash para el indice invertido de terminos --> clave: termino, valor: posting list.
         # Si se hace la implementacion multifield, se pude hacer un segundo nivel de hashing de tal forma que:
-        # self.index['title'] seria el indice invertido del campo 'title'.
+        #self.index['title'] seria el indice invertido del campo 'title'.
         self.sindex = {}  # hash para el indice invertido de stems --> clave: stem, valor: lista con los terminos que tienen ese stem
         self.ptindex = {}  # hash para el indice permuterm.
         self.docs = {}  # diccionario de terminos --> clave: entero(docid),  valor: ruta del fichero.
@@ -49,9 +51,15 @@ class SAR_Project:
         self.show_snippet = False  # valor por defecto, se cambia con self.set_snippet()
         self.use_stemming = False  # valor por defecto, se cambia con self.set_stemming()
         self.use_ranking = False  # valor por defecto, se cambia con self.set_ranking()
+        
+        #Variables empleadas en la muestra de resultados (show_stats(self))
+        self.total_tokens = 0 
+        self.total_stems = 0
+        self.total_perms = 0
+        
 
         self.doc_id = 0
-        self.new_id = 0
+        self.new_id = 0 #También sirve para contar el número de noticias indexadas
 
     ###############################
     ###                         ###
@@ -178,6 +186,7 @@ class SAR_Project:
         #
 
         new_pos = 0
+        
 
         for new in news_list:
             self.news[self.new_id] = (self.doc_id, new_pos)
@@ -188,31 +197,37 @@ class SAR_Project:
 
                     if tokenize:
                         content = self.tokenize(content)
-
+                    
                         term_pos = 0
 
                         for term in content:
                             self.index_term(term, self.new_id, term_pos, field)
-
+                            
                             term_pos += 1
-
+                        
                     else:
                         self.index_term(content, self.new_id, 0, field)
 
             else:
                 content = self.tokenize(new['article'])
-
+                
                 term_pos = 0
-
+                 
                 for term in content:
                     self.index_term(term, self.new_id, term_pos)
-
+                    
                     term_pos += 1
-
+            
             self.new_id += 1
+            
+            cc = self.tokenize(new['date'])
+            t_p = 0
+            for t in cc:
+                self.index
 
     def index_term(self, term, new_id, pos, field='article'):
         index = self.index if field == 'article' else self.index[field]
+        self.total_tokens =len(index)
 
         news_dic = index.get(term, None)
 
@@ -269,18 +284,20 @@ class SAR_Project:
 
                     else:
                         self.sindex[field][stem].append(term)
+                        self.total_stems += 1
 
         else:
             self.sindex = {}
 
             for term in self.index.keys():
                 stem = self.stemmer.stem(term)
-
+                
                 if stem not in self.sindex:
                     self.sindex[stem] = []
 
                 else:
                     self.sindex[stem].append(term)
+                    self.total_stems += 1
 
     def make_permuterm(self):
         """
@@ -299,18 +316,20 @@ class SAR_Project:
 
                 for term in inv_index.keys():
                     permuterms = self.generate_permuterms(term)
-
+                     
                     for p in permuterms:
                         bisect.insort_left(self.ptindex[field], (p, term))
+                        self.total_perms += 1
 
         else:
             self.ptindex = []
 
             for term in self.index.keys():
                 permuterms = self.generate_permuterms(term)
-
+                 
                 for p in permuterms:
                     bisect.insort_left(self.ptindex, (p, term))
+                    self.total_perms += 1
 
     def generate_permuterms(self, term):
         term += '$'
@@ -324,6 +343,46 @@ class SAR_Project:
         Muestra estadisticas de los indices
 
         """
+        print("===================================================")
+        print(f"Number of indexed days:{1}")
+        print("---------------------------------------------------")
+        print(f"Number of indexed news: {self.new_id}")
+        print("---------------------------------------------------")
+        print("TOKENS: ")
+        if self.multifield:
+            for field in self.fields:
+                if field[1]:
+                    print(f"         # of tokens in '{field[0]}' :{self.total_tokens} ")
+        else:
+            print(f"         # of tokens in 'article' :{self.total_tokens}")
+        if self.permuterm:
+            print("---------------------------------------------------")    
+            print("PERMUTERMS: ")
+            if self.multifield:
+                for field in self.fields:
+                    if field[1]:
+                        print(f"         # of permuterms in '{field[0]}' :{self.total_perms} ")
+            else:
+                print(f"         # of permuterms in 'article' :{self.total_perms}")
+        
+        if self.stemming:
+            print("---------------------------------------------------")    
+            print("STEMS: ")
+            if self.multifield:
+                for field in self.fields:
+                    if field[1]:
+                        print(f"         # of stems in '{field[0]}' :{self.total_stems} ")
+            else:
+                print(f"         # of stems in 'article' :{self.total_stems}")                
+
+
+        if self.positional:
+            print("---------------------------------------------------")
+            print("Positional queries are allowed")
+        else:
+            print("---------------------------------------------------")  
+            print("Positional queries are NOT allowed")
+        print("===================================================")
         pass
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
@@ -429,9 +488,9 @@ class SAR_Project:
 
         elif self.stemming:
             return self.get_stemming(term, field)
-            
+           
         res = list(index.get(term).keys())
-
+    
         return res
 
     def get_positionals(self, terms, field='article'):
@@ -446,6 +505,8 @@ class SAR_Project:
         return: posting list
 
         """
+        index = self.index if field == 'article' else self.index[field]
+
         pass
         ########################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE POSICIONALES ##
@@ -692,6 +753,9 @@ class SAR_Project:
 
         """
         result = self.solve_query(query)
+        print("===================================================")
+        print(f"Query: {query}")
+        print(f"Number of results: {self.solve_and_count(self,query)}")
 
         if self.use_ranking:
             result = self.rank_result(result, query)
