@@ -516,8 +516,10 @@ class SAR_Project:
         return: posting list con todos los newid exceptos los contenidos en p
 
         """
-
         full_list = list(self.news.keys())
+
+        return [x for x in full_list if x not in p]
+
         res = []
         x = y = 0
         
@@ -548,6 +550,8 @@ class SAR_Project:
         return: posting list con los newid incluidos en p1 y p2
 
         """
+        return [x for x in p1 if x in p2]
+
         if len(p1) == 0 or len(p2) == 0:
             return []
         
@@ -581,6 +585,7 @@ class SAR_Project:
         return: posting list con los newid incluidos de p1 o p2
 
         """
+        return p1 + [x for x in p2 if x not in p1]
 
         if len(p1) == 0 and len(p2) == 0:
             return []
