@@ -51,11 +51,6 @@ class SAR_Project:
         self.use_stemming = False  # valor por defecto, se cambia con self.set_stemming()
         self.use_ranking = False  # valor por defecto, se cambia con self.set_ranking()
 
-        # Variables empleadas en la muestra de resultados (show_stats(self))
-        self.total_tokens = 0
-        self.total_stems = 0
-        self.total_perms = 0
-
         self.doc_id = 0
         self.new_id = 0  # También sirve para contar el número de noticias indexadas
 
@@ -141,6 +136,10 @@ class SAR_Project:
         self.stemming = args['stem']
         self.permuterm = args['permuterm']
 
+        if self.multifield:
+            for field, _ in SAR_Project.fields:
+                self.index[field] = {}
+
         for dir, subdirs, files in os.walk(root):
             for filename in files:
                 if filename.endswith('.json'):
@@ -192,8 +191,6 @@ class SAR_Project:
                 for field, tokenize in SAR_Project.fields:
                     content = new[field]
 
-                    self.index[field] = {}
-
                     if tokenize:
                         content = self.tokenize(content)
 
@@ -221,7 +218,6 @@ class SAR_Project:
 
     def index_term(self, term, new_id, pos, field='article'):
         index = self.index[field] if self.multifield else self.index
-        self.total_tokens = len(index)
 
         news_dic = index.get(term, None)
 
@@ -265,7 +261,7 @@ class SAR_Project:
 
         """
         if self.multifield:
-            for field in [f for f, t in SAR_Project.fields if t is True]:
+            for field, _ in SAR_Project.fields:
                 self.sindex[field] = {}
 
                 inv_index = self.index[field]
@@ -278,7 +274,6 @@ class SAR_Project:
 
                     else:
                         self.sindex[field][stem].append(term)
-                        self.total_stems += 1
 
         else:
             self.sindex = {}
@@ -291,7 +286,6 @@ class SAR_Project:
 
                 else:
                     self.sindex[stem].append(term)
-                    self.total_stems += 1
 
     def make_permuterm(self):
         """
@@ -303,7 +297,7 @@ class SAR_Project:
         if self.multifield:
             self.ptindex = {}
 
-            for field in [f for f, t in SAR_Project.fields if t is True]:
+            for field, _ in SAR_Project.fields:
                 self.ptindex[field] = []
 
                 inv_index = self.index[field]
@@ -313,7 +307,6 @@ class SAR_Project:
 
                     for p in permuterms:
                         bisect.insort_left(self.ptindex[field], (p, term))
-                        self.total_perms += 1
 
         else:
             self.ptindex = []
@@ -323,7 +316,6 @@ class SAR_Project:
 
                 for p in permuterms:
                     bisect.insort_left(self.ptindex, (p, term))
-                    self.total_perms += 1
 
     def generate_permuterms(self, term):
         term += '$'
@@ -338,43 +330,40 @@ class SAR_Project:
 
         """
         print("===================================================")
-        print(f"Number of indexed days:{1}")
+        print(f"Number of indexed days: {len(self.index['date'] if self.multifield else '')}")
         print("---------------------------------------------------")
         print(f"Number of indexed news: {self.new_id}")
         print("---------------------------------------------------")
         print("TOKENS: ")
 
         if self.multifield:
-            for field in self.fields:
-                if field[1]:
-                    print(f"         # of tokens in '{field[0]}' :{self.total_tokens} ")
+            for field, t in self.fields:
+                print(f"         # of tokens in '{field}' : {len(self.index[field])} ")
 
         else:
-            print(f"         # of tokens in 'article' :{self.total_tokens}")
+            print(f"         # of tokens in 'article' : {len(self.index)}")
 
         if self.permuterm:
             print("---------------------------------------------------")
             print("PERMUTERMS: ")
 
             if self.multifield:
-                for field in self.fields:
-                    if field[1]:
-                        print(f"         # of permuterms in '{field[0]}' :{self.total_perms} ")
+                for field, _ in self.fields:
+                    print(f"         # of permuterms in '{field}' : {len(self.ptindex[field])} ")
 
             else:
-                print(f"         # of permuterms in 'article' :{self.total_perms}")
+                print(f"         # of permuterms in 'article' : {len(self.ptindex)}")
 
         if self.stemming:
             print("---------------------------------------------------")
             print("STEMS: ")
 
             if self.multifield:
-                for field in self.fields:
-                    if field[1]:
-                        print(f"         # of stems in '{field[0]}' :{self.total_stems} ")
+                for field, _ in self.fields:
+                    print(f"         # of stems in '{field}' : {len(self.sindex[field])} ")
 
             else:
-                print(f"         # of stems in 'article' :{self.total_stems}")
+                print(f"         # of stems in 'article' : {len(self.sindex)}")
 
         if self.positional:
             print("---------------------------------------------------")
@@ -791,3 +780,4 @@ if __name__ == '__main__':
     indexer = SAR_Project()
 
     indexer.index_dir('corpora\\2015', multifield=True, positional=False, stem=False, permuterm=False)
+    indexer.show_stats()
