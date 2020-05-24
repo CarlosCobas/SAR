@@ -192,6 +192,8 @@ class SAR_Project:
                 for field, tokenize in SAR_Project.fields:
                     content = new[field]
 
+                    self.index[field] = {}
+
                     if tokenize:
                         content = self.tokenize(content)
 
@@ -218,7 +220,7 @@ class SAR_Project:
             self.new_id += 1
 
     def index_term(self, term, new_id, pos, field='article'):
-        index = self.index if field == 'article' else self.index[field]
+        index = self.index[field] if self.multifield else self.index
         self.total_tokens = len(index)
 
         news_dic = index.get(term, None)
@@ -481,7 +483,7 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if field == 'article' else self.index[field]
+        index = self.index if self.multifield else self.index[field]
 
         if '*' in term or '?' in term:
             return self.get_permuterm(term)
@@ -505,7 +507,7 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if field == 'article' else self.index[field]
+        index = self.index if self.multifield else self.index[field]
 
         pass
         ########################################################
@@ -524,7 +526,7 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if field == 'article' else self.index[field]
+        index = self.index if self.multifield else self.index[field]
 
         stem = self.stemmer.stem(term)
 
@@ -542,7 +544,7 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if field == 'article' else self.index[field]
+        index = self.index if self.multifield else self.index[field]
 
         if '*' in term:
             p1, p2 = term.split('*')
@@ -783,3 +785,9 @@ class SAR_Project:
         ###################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE RANKING ##
         ###################################################
+
+
+if __name__ == '__main__':
+    indexer = SAR_Project()
+
+    indexer.index_dir('corpora\\2015', multifield=True, positional=False, stem=False, permuterm=False)
