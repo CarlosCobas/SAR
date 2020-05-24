@@ -417,37 +417,41 @@ class SAR_Project:
         terms_postings = {}
         term_pos = 0
         for term in query_list:
-            if term not in connectors:
-                pl = self.get_posting(*term)
-                terms_postings[term_pos] = pl
+            for t in term:
+                if t not in connectors:
+                    pl = self.get_posting(*term)
+                    terms_postings[term_pos] = pl
             term_pos = term_pos +1
 
-        for i in range(len(query_list) - 1):
+        query_list = [val for sublist in query_list for val in sublist]
+        
+        x = 0
+        while x < len(query_list) - 1:
 
-            if query_list[i] == 'NOT':
-                terms_postings[i + 1] = self.reverse_posting(terms_postings.get(i + 1))
+            if query_list[x] == 'NOT':
+                terms_postings[x+1] = self.reverse_posting(terms_postings.get(x+1))
 
-            elif query_list[i] == 'AND':
-                prev_term_posting = terms_postings.get(i - 1)
-
-                if query_list[i + 1] == 'NOT':
-                    second_term_posting = self.reverse_posting(terms_postings.get(i + 2))
-                    terms_postings[i + 2] = self.and_posting(prev_term_posting, second_term_posting)
-                    i += 1  # Avanzo para no repetir el NOT
-
+            elif query_list[x] == 'AND':
+                prev_term_posting = terms_postings.get(x-1)
+                if query_list[x+1] == 'NOT':
+                    second_term_posting = self.reverse_posting(terms_postings.get(x+2))
+                    terms_postings[x+2] = self.and_posting(prev_term_posting, second_term_posting)
+                    x = x+1 #Avanzo para no repetir el NOT
                 else:
-                    terms_postings[i + 1] = self.and_posting(prev_term_posting, terms_postings.get(i + 1))
+                    terms_postings[x+1] = self.and_posting(prev_term_posting, terms_postings.get(x+1))
 
-            elif query_list[i] == 'OR':
-                prev_term_posting = terms_postings.get(i - 1)
-
-                if query_list[i + 1] == 'NOT':
-                    second_term_posting = self.reverse_posting(terms_postings.get(i + 2))
-                    terms_postings[i + 2] = self.or_posting(prev_term_posting, second_term_posting)
-                    i += 1  # Avanzo para no repetir el NOT
-
+            elif query_list[x] == 'OR':
+                prev_term_posting = terms_postings.get(x-1)
+                if query_list[x+1] == 'NOT':
+                    second_term_posting = self.reverse_posting(terms_postings.get(x+2))
+                    terms_postings[x+2] = self.or_posting(prev_term_posting, second_term_posting)
+                    x = x+1 #Avanzo para no repetir el NOT
                 else:
-                    terms_postings[i + 1] = self.or_posting(prev_term_posting, terms_postings.get(i + 1))
+                    terms_postings[x+1] = self.or_posting(prev_term_posting, terms_postings.get(x+1))
+
+
+            x = x+1 
+
 
         return terms_postings[len(query_list) - 1]
 
@@ -522,8 +526,11 @@ class SAR_Project:
         index = self.index if self.multifield else self.index[field]
 
         stem = self.stemmer.stem(term)
-
-        return [index[t][:] for t in self.sindex[stem]]
+        
+        if stem in list(self.sindex.keys()):
+            return [index[t][:]  for t in self.sindex[stem] ]
+        else:
+            return []
 
     def get_permuterm(self, term, field='article'):  # TODO: Check if it works
         """
