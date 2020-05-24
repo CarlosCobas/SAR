@@ -402,50 +402,48 @@ class SAR_Project:
 
         """
 
-        if query is None or len(query) == 0:
+        if query is None or query == '' or len(query) == 0:
             return []
 
         connectors = ['AND', 'OR', 'NOT']
-        query_as_list = query.split()
+        query_list = query.split()
 
         # One word query
-        if len(query_as_list) == 1 and query_as_list[0] not in connectors:
-            return self.get_posting(query_as_list[0])
+        if len(query_list) == 1 and query not in connectors:
+            return self.get_posting(query)
 
-        query_terms_postings = {t: self.get_posting(t) for t in query_as_list if t not in connectors}
+        query_list = list(map(lambda x: x.split(':') if ':' in x else [x], query_list))  # separamos termino y campo si hay ':'
 
-        x = 0
+        terms_postings = {t: self.get_posting(*t) for t in query_list if t not in connectors}
 
-        while x < len(query_as_list) - 1:
+        for i in range(len(query_list) - 1):
 
-            if query_as_list[x] == 'NOT':
-                query_terms_postings[x + 1] = self.reverse_posting(query_terms_postings.get(x + 1))
+            if query_list[i] == 'NOT':
+                terms_postings[i + 1] = self.reverse_posting(terms_postings.get(i + 1))
 
-            elif query_as_list[x] == 'AND':
-                prev_term_posting = query_terms_postings.get(x - 1)
+            elif query_list[i] == 'AND':
+                prev_term_posting = terms_postings.get(i - 1)
 
-                if query_as_list[x + 1] == 'NOT':
-                    second_term_posting = self.reverse_posting(query_terms_postings.get(x + 2))
-                    query_terms_postings[x + 2] = self.and_posting(prev_term_posting, second_term_posting)
-                    x += 1  # Avanzo para no repetir el NOT
-
-                else:
-                    query_terms_postings[x + 1] = self.and_posting(prev_term_posting, query_terms_postings.get(x + 1))
-
-            elif query_as_list[x] == 'OR':
-                prev_term_posting = query_terms_postings.get(x - 1)
-
-                if query_as_list[x + 1] == 'NOT':
-                    second_term_posting = self.reverse_posting(query_terms_postings.get(x + 2))
-                    query_terms_postings[x + 2] = self.or_posting(prev_term_posting, second_term_posting)
-                    x += 1  # Avanzo para no repetir el NOT
+                if query_list[i + 1] == 'NOT':
+                    second_term_posting = self.reverse_posting(terms_postings.get(i + 2))
+                    terms_postings[i + 2] = self.and_posting(prev_term_posting, second_term_posting)
+                    i += 1  # Avanzo para no repetir el NOT
 
                 else:
-                    query_terms_postings[x + 1] = self.or_posting(prev_term_posting, query_terms_postings.get(x + 1))
+                    terms_postings[i + 1] = self.and_posting(prev_term_posting, terms_postings.get(i + 1))
 
-            x += 1
+            elif query_list[i] == 'OR':
+                prev_term_posting = terms_postings.get(i - 1)
 
-        return query_terms_postings[len(query_as_list) - 1]
+                if query_list[i + 1] == 'NOT':
+                    second_term_posting = self.reverse_posting(terms_postings.get(i + 2))
+                    terms_postings[i + 2] = self.or_posting(prev_term_posting, second_term_posting)
+                    i += 1  # Avanzo para no repetir el NOT
+
+                else:
+                    terms_postings[i + 1] = self.or_posting(prev_term_posting, terms_postings.get(i + 1))
+
+        return terms_postings[len(query_list) - 1]
 
     def get_posting(self, term, field='article'):
         """
@@ -568,23 +566,23 @@ class SAR_Project:
 
         return [x for x in full_list if x not in p]
 
-        res = []
-        x = y = 0
-
-        while x < len(full_list) and y < len(p):
-            if full_list[x] == p[y]:
-                x = x + 1
-                y = y + 1
-
-            else:
-                res.append(full_list[x])
-                x = x + 1
-
-        while x < len(full_list):
-            res.append(full_list[x])
-            x = x + 1
-
-        return res
+        # res = []
+        # x = y = 0
+        #
+        # while x < len(full_list) and y < len(p):
+        #     if full_list[x] == p[y]:
+        #         x = x + 1
+        #         y = y + 1
+        #
+        #     else:
+        #         res.append(full_list[x])
+        #         x = x + 1
+        #
+        # while x < len(full_list):
+        #     res.append(full_list[x])
+        #     x = x + 1
+        #
+        # return res
 
     def and_posting(self, p1, p2):
         """
@@ -598,13 +596,10 @@ class SAR_Project:
         return: posting list con los newid incluidos en p1 y p2
 
         """
-        if p1 is None or p2 is None:
+        if p1 is None or p2 is None or len(p1) == 0 or len(p2) == 0:
             return []
 
-        return [x for x in p1 if x in p2]
-
-        if len(p1) == 0 or len(p2) == 0:
-            return []
+        # return [x for x in p1 if x in p2]
 
         res = []
         x = y = 0
@@ -636,10 +631,10 @@ class SAR_Project:
         return: posting list con los newid incluidos de p1 o p2
 
         """
-        return p1 + [x for x in p2 if x not in p1]
-
-        if len(p1) == 0 and len(p2) == 0:
+        if p1 is None or p2 is None or len(p1) == 0 or len(p2) == 0:
             return []
+
+        # return p1 + [x for x in p2 if x not in p1]
 
         res = []
         x = y = 0
@@ -669,7 +664,7 @@ class SAR_Project:
 
         return res
 
-    # TODO: revisar porque falla cuando lo uso (El and not queria hacerlo con este metodo pero falla) // Check if it works
+    # TODO: revisar porque falla cuando lo uso (El and not queria hacerlo con este metodo pero falla)
     def minus_posting(self, p1, p2):
         """
         OPCIONAL PARA TODAS LAS VERSIONES
@@ -683,10 +678,10 @@ class SAR_Project:
         return: posting list con los newid incluidos de p1 y no en p2
 
         """
-        return [x for x in p1 if x not in p2]
-
-        if len(p1) == 0:
+        if p1 is None or p2 is None or len(p1) == 0 or len(p2) == 0:
             return []
+
+        # return [x for x in p1 if x not in p2]
 
         res = []
         x = y = 0
