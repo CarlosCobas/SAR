@@ -462,8 +462,9 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if self.multifield else self.index[field]
-
+        #index = self.index if self.multifield else self.index[field]
+        index = self.index if field == 'article' else self.index[field]    
+            
         if '*' in term or '?' in term:
             return self.get_permuterm(term)
 
