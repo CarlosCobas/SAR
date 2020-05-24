@@ -413,8 +413,14 @@ class SAR_Project:
             return self.get_posting(query)
 
         query_list = list(map(lambda x: x.split(':') if ':' in x else [x], query_list))  # separamos termino y campo si hay ':'
-
-        terms_postings = {t: self.get_posting(*t) for t in query_list if t not in connectors}
+        
+        terms_postings = {}
+        term_pos = 0
+        for term in query_list:
+            if term not in connectors:
+                pl = self.get_posting(*term)
+                terms_postings[term_pos] = pl
+            term_pos = term_pos +1
 
         for i in range(len(query_list) - 1):
 
@@ -743,19 +749,20 @@ class SAR_Project:
         """
         result = self.solve_query(query)
 
-        print("===================================================")
-        print(f"Query: {query}")
-        print(f"Number of results: {self.solve_and_count(query)}")
 
         if self.use_ranking:
             result = self.rank_result(result, query)
 
-        # for news in result:
+
+        print("===================================================\n")
+        print(f"Query: {query}")
+        print(f"Number of results: {self.solve_and_count(query)}")
+
+        
+        for news_id in result:
+            print(news_id)
 
 
-        print("=================================================\n")
-        print("Query: %s" % query)    
-        print("Result: %d" % len(result))    
         print("=================================================\n")
 
 
