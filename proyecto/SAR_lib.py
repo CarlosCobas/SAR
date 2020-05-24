@@ -1,8 +1,10 @@
 import bisect
 import json
-from nltk.stem.snowball import SnowballStemmer
 import os
+import pickle
 import re
+
+from nltk.stem.snowball import SnowballStemmer
 
 
 class SAR_Project:
@@ -26,8 +28,6 @@ class SAR_Project:
     # numero maximo de documento a mostrar cuando self.show_all es False
     SHOW_MAX = 10
 
-    
-
     def __init__(self):
         """
         Constructor de la classe SAR_Indexer.
@@ -39,7 +39,7 @@ class SAR_Project:
         """
         self.index = {}  # hash para el indice invertido de terminos --> clave: termino, valor: posting list.
         # Si se hace la implementacion multifield, se pude hacer un segundo nivel de hashing de tal forma que:
-        #self.index['title'] seria el indice invertido del campo 'title'.
+        # self.index['title'] seria el indice invertido del campo 'title'.
         self.sindex = {}  # hash para el indice invertido de stems --> clave: stem, valor: lista con los terminos que tienen ese stem
         self.ptindex = {}  # hash para el indice permuterm.
         self.docs = {}  # diccionario de terminos --> clave: entero(docid),  valor: ruta del fichero.
@@ -51,15 +51,9 @@ class SAR_Project:
         self.show_snippet = False  # valor por defecto, se cambia con self.set_snippet()
         self.use_stemming = False  # valor por defecto, se cambia con self.set_stemming()
         self.use_ranking = False  # valor por defecto, se cambia con self.set_ranking()
-        
-        #Variables empleadas en la muestra de resultados (show_stats(self))
-        self.total_tokens = 0 
-        self.total_stems = 0
-        self.total_perms = 0
-        
 
         self.doc_id = 0
-        self.new_id = 0 #También sirve para contar el número de noticias indexadas
+        self.new_id = 0  # También sirve para contar el número de noticias indexadas
 
     ###############################
     ###                         ###
@@ -143,6 +137,10 @@ class SAR_Project:
         self.stemming = args['stem']
         self.permuterm = args['permuterm']
 
+        if self.multifield:
+            for field, _ in SAR_Project.fields:
+                self.index[field] = {}
+
         for dir, subdirs, files in os.walk(root):
             for filename in files:
                 if filename.endswith('.json'):
@@ -186,7 +184,6 @@ class SAR_Project:
         #
 
         new_pos = 0
-        
 
         for new in news_list:
             self.news[self.new_id] = (self.doc_id, new_pos)
@@ -197,37 +194,31 @@ class SAR_Project:
 
                     if tokenize:
                         content = self.tokenize(content)
-                    
+
                         term_pos = 0
 
                         for term in content:
                             self.index_term(term, self.new_id, term_pos, field)
-                            
+
                             term_pos += 1
-                        
+
                     else:
                         self.index_term(content, self.new_id, 0, field)
 
             else:
                 content = self.tokenize(new['article'])
-                
+
                 term_pos = 0
-                 
+
                 for term in content:
                     self.index_term(term, self.new_id, term_pos)
-                    
+
                     term_pos += 1
-            
+
             self.new_id += 1
-            
-            cc = self.tokenize(new['date'])
-            t_p = 0
-            for t in cc:
-                self.index
 
     def index_term(self, term, new_id, pos, field='article'):
-        index = self.index if field == 'article' else self.index[field]
-        self.total_tokens =len(index)
+        index = self.index[field] if self.multifield else self.index
 
         news_dic = index.get(term, None)
 
@@ -271,7 +262,7 @@ class SAR_Project:
 
         """
         if self.multifield:
-            for field in [f for f, t in SAR_Project.fields if t is True]:
+            for field, _ in SAR_Project.fields:
                 self.sindex[field] = {}
 
                 inv_index = self.index[field]
@@ -284,20 +275,18 @@ class SAR_Project:
 
                     else:
                         self.sindex[field][stem].append(term)
-                        self.total_stems += 1
 
         else:
             self.sindex = {}
 
             for term in self.index.keys():
                 stem = self.stemmer.stem(term)
-                
+
                 if stem not in self.sindex:
                     self.sindex[stem] = []
 
                 else:
                     self.sindex[stem].append(term)
-                    self.total_stems += 1
 
     def make_permuterm(self):
         """
@@ -309,27 +298,25 @@ class SAR_Project:
         if self.multifield:
             self.ptindex = {}
 
-            for field in [f for f, t in SAR_Project.fields if t is True]:
+            for field, _ in SAR_Project.fields:
                 self.ptindex[field] = []
 
                 inv_index = self.index[field]
 
                 for term in inv_index.keys():
                     permuterms = self.generate_permuterms(term)
-                     
+
                     for p in permuterms:
                         bisect.insort_left(self.ptindex[field], (p, term))
-                        self.total_perms += 1
 
         else:
             self.ptindex = []
 
             for term in self.index.keys():
                 permuterms = self.generate_permuterms(term)
-                 
+
                 for p in permuterms:
                     bisect.insort_left(self.ptindex, (p, term))
-                    self.total_perms += 1
 
     def generate_permuterms(self, term):
         term += '$'
@@ -344,44 +331,49 @@ class SAR_Project:
 
         """
         print("===================================================")
-        print(f"Number of indexed days:{1}")
+        print(f"Number of indexed days: {len(self.index['date'] if self.multifield else '')}")
         print("---------------------------------------------------")
         print(f"Number of indexed news: {self.new_id}")
         print("---------------------------------------------------")
         print("TOKENS: ")
-        if self.multifield:
-            for field in self.fields:
-                if field[1]:
-                    print(f"         # of tokens in '{field[0]}' :{self.total_tokens} ")
-        else:
-            print(f"         # of tokens in 'article' :{self.total_tokens}")
-        if self.permuterm:
-            print("---------------------------------------------------")    
-            print("PERMUTERMS: ")
-            if self.multifield:
-                for field in self.fields:
-                    if field[1]:
-                        print(f"         # of permuterms in '{field[0]}' :{self.total_perms} ")
-            else:
-                print(f"         # of permuterms in 'article' :{self.total_perms}")
-        
-        if self.stemming:
-            print("---------------------------------------------------")    
-            print("STEMS: ")
-            if self.multifield:
-                for field in self.fields:
-                    if field[1]:
-                        print(f"         # of stems in '{field[0]}' :{self.total_stems} ")
-            else:
-                print(f"         # of stems in 'article' :{self.total_stems}")                
 
+        if self.multifield:
+            for field, t in self.fields:
+                print(f"         # of tokens in '{field}' : {len(self.index[field])} ")
+
+        else:
+            print(f"         # of tokens in 'article' : {len(self.index)}")
+
+        if self.permuterm:
+            print("---------------------------------------------------")
+            print("PERMUTERMS: ")
+
+            if self.multifield:
+                for field, _ in self.fields:
+                    print(f"         # of permuterms in '{field}' : {len(self.ptindex[field])} ")
+
+            else:
+                print(f"         # of permuterms in 'article' : {len(self.ptindex)}")
+
+        if self.stemming:
+            print("---------------------------------------------------")
+            print("STEMS: ")
+
+            if self.multifield:
+                for field, _ in self.fields:
+                    print(f"         # of stems in '{field}' : {len(self.sindex[field])} ")
+
+            else:
+                print(f"         # of stems in 'article' : {len(self.sindex)}")
 
         if self.positional:
             print("---------------------------------------------------")
             print("Positional queries are allowed")
+
         else:
-            print("---------------------------------------------------")  
+            print("---------------------------------------------------")
             print("Positional queries are NOT allowed")
+
         print("===================================================")
         pass
         ########################################
@@ -413,56 +405,47 @@ class SAR_Project:
         if query is None or len(query) == 0:
             return []
 
-        connections = ['AND', 'OR', 'NOT']
+        connectors = ['AND', 'OR', 'NOT']
         query_as_list = query.split()
-        postings_query_terms = {}
 
         # One word query
-        if len(query_as_list) == 1 and query_as_list[0] not in connections:
+        if len(query_as_list) == 1 and query_as_list[0] not in connectors:
             return self.get_posting(query_as_list[0])
-        
-        term_pos = 0
-        for term in query_as_list:
-            if term not in connections:
-                pl = self.get_posting(term)
-                postings_query_terms[term_pos] = pl
 
-            term_pos += 1
+        query_terms_postings = {t: self.get_posting(t) for t in query_as_list if t not in connectors}
 
         x = 0
-
-        working_res = []
 
         while x < len(query_as_list) - 1:
 
             if query_as_list[x] == 'NOT':
-                postings_query_terms[x+1] = self.reverse_posting(postings_query_terms.get(x+1))
+                query_terms_postings[x + 1] = self.reverse_posting(query_terms_postings.get(x + 1))
 
             elif query_as_list[x] == 'AND':
-                prev_term_posting = postings_query_terms.get(x-1)
+                prev_term_posting = query_terms_postings.get(x - 1)
 
-                if query_as_list[x+1] == 'NOT':
-                    second_term_posting = self.reverse_posting(postings_query_terms.get(x+2))
-                    postings_query_terms[x+2] = self.and_posting(prev_term_posting, second_term_posting)
+                if query_as_list[x + 1] == 'NOT':
+                    second_term_posting = self.reverse_posting(query_terms_postings.get(x + 2))
+                    query_terms_postings[x + 2] = self.and_posting(prev_term_posting, second_term_posting)
                     x += 1  # Avanzo para no repetir el NOT
 
                 else:
-                    postings_query_terms[x+1] = self.and_posting(prev_term_posting, postings_query_terms.get(x+1))
+                    query_terms_postings[x + 1] = self.and_posting(prev_term_posting, query_terms_postings.get(x + 1))
 
             elif query_as_list[x] == 'OR':
-                prev_term_posting = postings_query_terms.get(x-1)
+                prev_term_posting = query_terms_postings.get(x - 1)
 
-                if query_as_list[x+1] == 'NOT':
-                    second_term_posting = self.reverse_posting(postings_query_terms.get(x+2))
-                    postings_query_terms[x+2] = self.or_posting(prev_term_posting, second_term_posting)
+                if query_as_list[x + 1] == 'NOT':
+                    second_term_posting = self.reverse_posting(query_terms_postings.get(x + 2))
+                    query_terms_postings[x + 2] = self.or_posting(prev_term_posting, second_term_posting)
                     x += 1  # Avanzo para no repetir el NOT
 
                 else:
-                    postings_query_terms[x+1] = self.or_posting(prev_term_posting, postings_query_terms.get(x+1))
+                    query_terms_postings[x + 1] = self.or_posting(prev_term_posting, query_terms_postings.get(x + 1))
 
             x += 1
 
-        return postings_query_terms[len(query_as_list) - 1]
+        return query_terms_postings[len(query_as_list) - 1]
 
     def get_posting(self, term, field='article'):
         """
@@ -481,20 +464,20 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if field == 'article' else self.index[field]
+        index = self.index if self.multifield else self.index[field]
 
         if '*' in term or '?' in term:
             return self.get_permuterm(term)
 
         elif self.stemming:
             return self.get_stemming(term, field)
-           
+
         res_con_repetidos = list(index.get(term))
         res = []
         for i in res_con_repetidos:
             if i not in res:
                 res.append(i)
-                
+
         return res
 
     def get_positionals(self, terms, field='article'):
@@ -509,9 +492,7 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if field == 'article' else self.index[field]
-
-
+        index = self.index if self.multifield else self.index[field]
 
         pass
         ########################################################
@@ -530,7 +511,7 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if field == 'article' else self.index[field]
+        index = self.index if self.multifield else self.index[field]
 
         stem = self.stemmer.stem(term)
 
@@ -548,7 +529,7 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if field == 'article' else self.index[field]
+        index = self.index if self.multifield else self.index[field]
 
         if '*' in term:
             p1, p2 = term.split('*')
@@ -589,7 +570,7 @@ class SAR_Project:
 
         res = []
         x = y = 0
-        
+
         while x < len(full_list) and y < len(p):
             if full_list[x] == p[y]:
                 x = x + 1
@@ -602,7 +583,7 @@ class SAR_Project:
         while x < len(full_list):
             res.append(full_list[x])
             x = x + 1
-        
+
         return res
 
     def and_posting(self, p1, p2):
@@ -617,11 +598,14 @@ class SAR_Project:
         return: posting list con los newid incluidos en p1 y p2
 
         """
+        if p1 is None or p2 is None:
+            return []
+
         return [x for x in p1 if x in p2]
 
         if len(p1) == 0 or len(p2) == 0:
             return []
-        
+
         res = []
         x = y = 0
 
@@ -656,7 +640,7 @@ class SAR_Project:
 
         if len(p1) == 0 and len(p2) == 0:
             return []
-        
+
         res = []
         x = y = 0
 
@@ -678,7 +662,7 @@ class SAR_Project:
         while x < len(p1):
             res.append(p1[x])
             x += 1
-        
+
         while y < len(p2):
             res.append(p2[y])
             y += 1
@@ -719,7 +703,7 @@ class SAR_Project:
         while x < len(p1):
             res.append(p1[x])
             x += 1
-        
+
         return res
 
     #####################################
@@ -759,6 +743,7 @@ class SAR_Project:
 
         """
         result = self.solve_query(query)
+
         print("===================================================")
         print(f"Query: {query}")
         print(f"Number of results: {self.solve_and_count(query)}")
@@ -788,3 +773,19 @@ class SAR_Project:
         ###################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE RANKING ##
         ###################################################
+
+
+if __name__ == '__main__':
+    indexer = SAR_Project()
+
+    # indexer.index_dir('corpora\\2015', multifield=True, positional=False, stem=False, permuterm=False)
+    # indexer.show_stats()
+
+    searcher = pickle.load(open('2015_index.bin', 'rb'))
+
+    searcher.set_stemming(False)
+    searcher.set_ranking(False)
+    searcher.set_showall(False)
+    searcher.set_snippet(False)
+
+    searcher.solve_and_show('isla AND valencia AND pero')
