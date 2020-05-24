@@ -417,13 +417,18 @@ class SAR_Project:
         terms_postings = {}
         term_pos = 0
         for term in query_list:
-            for t in term:
-                if t not in connectors:
+            term.reverse()
+            if(len(term) == 1):
+                if term[0] not in connectors:
                     pl = self.get_posting(*term)
                     terms_postings[term_pos] = pl
+            else:
+                pl = self.get_posting(*term)
+                terms_postings[term_pos] = pl
+
             term_pos = term_pos +1
 
-        query_list = [val for sublist in query_list for val in sublist]
+        query_list = query.split()
         
         x = 0
         while x < len(query_list) - 1:
