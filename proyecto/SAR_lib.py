@@ -472,9 +472,9 @@ class SAR_Project:
         return: posting list
 
         """
-        #index = self.index if self.multifield else self.index[field]
-        index = self.index if field == 'article' else self.index[field]    
-            
+        index = self.index if not self.multifield else self.index[field]
+        
+
         if '*' in term or '?' in term:
             return self.get_permuterm(term)
 
@@ -526,7 +526,9 @@ class SAR_Project:
         index = self.index if self.multifield else self.index[field]
 
         stem = self.stemmer.stem(term)
-        
+
+        print(stem)
+
         if stem in list(self.sindex.keys()):
             return [index[t][:]  for t in self.sindex[stem] ]
         else:
