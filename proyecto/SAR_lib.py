@@ -1,8 +1,10 @@
 import bisect
 import json
-from nltk.stem.snowball import SnowballStemmer
 import os
+import pickle
 import re
+
+from nltk.stem.snowball import SnowballStemmer
 
 
 class SAR_Project:
@@ -51,7 +53,7 @@ class SAR_Project:
         self.use_ranking = False  # valor por defecto, se cambia con self.set_ranking()
 
         self.doc_id = 0
-        self.new_id = 0
+        self.new_id = 0  # También sirve para contar el número de noticias indexadas
 
     ###############################
     ###                         ###
@@ -135,6 +137,10 @@ class SAR_Project:
         self.stemming = args['stem']
         self.permuterm = args['permuterm']
 
+        if self.multifield:
+            for field, _ in SAR_Project.fields:
+                self.index[field] = {}
+
         for dir, subdirs, files in os.walk(root):
             for filename in files:
                 if filename.endswith('.json'):
@@ -211,8 +217,8 @@ class SAR_Project:
 
             self.new_id += 1
 
-    def index_term(self, term, new_id, pos, field=None):
-        index = self.index if field is None else self.index[field]
+    def index_term(self, term, new_id, pos, field='article'):
+        index = self.index[field] if self.multifield else self.index
 
         news_dic = index.get(term, None)
 
@@ -256,7 +262,7 @@ class SAR_Project:
 
         """
         if self.multifield:
-            for field in [f for f, t in SAR_Project.fields if t is True]:
+            for field, _ in SAR_Project.fields:
                 self.sindex[field] = {}
 
                 inv_index = self.index[field]
@@ -292,7 +298,7 @@ class SAR_Project:
         if self.multifield:
             self.ptindex = {}
 
-            for field in [f for f, t in SAR_Project.fields if t is True]:
+            for field, _ in SAR_Project.fields:
                 self.ptindex[field] = []
 
                 inv_index = self.index[field]
@@ -301,7 +307,7 @@ class SAR_Project:
                     permuterms = self.generate_permuterms(term)
 
                     for p in permuterms:
-                        bisect.insort_left(self.ptindex[field], p)
+                        bisect.insort_left(self.ptindex[field], (p, term))
 
         else:
             self.ptindex = []
@@ -310,7 +316,7 @@ class SAR_Project:
                 permuterms = self.generate_permuterms(term)
 
                 for p in permuterms:
-                    bisect.insort_left(self.ptindex, p)
+                    bisect.insort_left(self.ptindex, (p, term))
 
     def generate_permuterms(self, term):
         term += '$'
@@ -324,6 +330,51 @@ class SAR_Project:
         Muestra estadisticas de los indices
 
         """
+        print("===================================================")
+        print(f"Number of indexed days: {len(self.index['date'] if self.multifield else '')}")
+        print("---------------------------------------------------")
+        print(f"Number of indexed news: {self.new_id}")
+        print("---------------------------------------------------")
+        print("TOKENS: ")
+
+        if self.multifield:
+            for field, t in self.fields:
+                print(f"         # of tokens in '{field}' : {len(self.index[field])} ")
+
+        else:
+            print(f"         # of tokens in 'article' : {len(self.index)}")
+
+        if self.permuterm:
+            print("---------------------------------------------------")
+            print("PERMUTERMS: ")
+
+            if self.multifield:
+                for field, _ in self.fields:
+                    print(f"         # of permuterms in '{field}' : {len(self.ptindex[field])} ")
+
+            else:
+                print(f"         # of permuterms in 'article' : {len(self.ptindex)}")
+
+        if self.stemming:
+            print("---------------------------------------------------")
+            print("STEMS: ")
+
+            if self.multifield:
+                for field, _ in self.fields:
+                    print(f"         # of stems in '{field}' : {len(self.sindex[field])} ")
+
+            else:
+                print(f"         # of stems in 'article' : {len(self.sindex)}")
+
+        if self.positional:
+            print("---------------------------------------------------")
+            print("Positional queries are allowed")
+
+        else:
+            print("---------------------------------------------------")
+            print("Positional queries are NOT allowed")
+
+        print("===================================================")
         pass
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
@@ -351,59 +402,48 @@ class SAR_Project:
 
         """
 
-        if query is None or len(query) == 0:
+        if query is None or query == '' or len(query) == 0:
             return []
 
-        connections = ['AND', 'OR', 'NOT']
-        query_as_list = query.split()
-        postings_query_terms = {}
+        connectors = ['AND', 'OR', 'NOT']
+        query_list = query.split()
 
         # One word query
-        if len(query_as_list) == 1 and query_as_list[0] not in connections:
-            return self.get_posting(query_as_list[0])
-        
-        term_pos = 0
-        for term in query_as_list:
-            if term not in connections:
-                pl = self.get_posting(term)
-                postings_query_terms[term_pos] = pl
+        if len(query_list) == 1 and query not in connectors:
+            return self.get_posting(query)
 
-            term_pos += 1
+        query_list = list(map(lambda x: x.split(':') if ':' in x else [x], query_list))  # separamos termino y campo si hay ':'
 
-        x = 0
+        terms_postings = {t: self.get_posting(*t) for t in query_list if t not in connectors}
 
-        working_res = []
+        for i in range(len(query_list) - 1):
 
-        while x < len(query_as_list) - 1:
+            if query_list[i] == 'NOT':
+                terms_postings[i + 1] = self.reverse_posting(terms_postings.get(i + 1))
 
-            if query_as_list[x] == 'NOT':
-                postings_query_terms[x+1] = self.reverse_posting(postings_query_terms.get(x+1))
+            elif query_list[i] == 'AND':
+                prev_term_posting = terms_postings.get(i - 1)
 
-            elif query_as_list[x] == 'AND':
-                prev_term_posting = postings_query_terms.get(x-1)
-
-                if query_as_list[x+1] == 'NOT':
-                    second_term_posting = self.reverse_posting(postings_query_terms.get(x+2))
-                    postings_query_terms[x+2] = self.and_posting(prev_term_posting, second_term_posting)
-                    x += 1  # Avanzo para no repetir el NOT
+                if query_list[i + 1] == 'NOT':
+                    second_term_posting = self.reverse_posting(terms_postings.get(i + 2))
+                    terms_postings[i + 2] = self.and_posting(prev_term_posting, second_term_posting)
+                    i += 1  # Avanzo para no repetir el NOT
 
                 else:
-                    postings_query_terms[x+1] = self.and_posting(prev_term_posting, postings_query_terms.get(x+1))
+                    terms_postings[i + 1] = self.and_posting(prev_term_posting, terms_postings.get(i + 1))
 
-            elif query_as_list[x] == 'OR':
-                prev_term_posting = postings_query_terms.get(x-1)
+            elif query_list[i] == 'OR':
+                prev_term_posting = terms_postings.get(i - 1)
 
-                if query_as_list[x+1] == 'NOT':
-                    second_term_posting = self.reverse_posting(postings_query_terms.get(x+2))
-                    postings_query_terms[x+2] = self.or_posting(prev_term_posting, second_term_posting)
-                    x += 1  # Avanzo para no repetir el NOT
+                if query_list[i + 1] == 'NOT':
+                    second_term_posting = self.reverse_posting(terms_postings.get(i + 2))
+                    terms_postings[i + 2] = self.or_posting(prev_term_posting, second_term_posting)
+                    i += 1  # Avanzo para no repetir el NOT
 
                 else:
-                    postings_query_terms[x+1] = self.or_posting(prev_term_posting, postings_query_terms.get(x+1))
+                    terms_postings[i + 1] = self.or_posting(prev_term_posting, terms_postings.get(i + 1))
 
-            x += 1
-
-        return postings_query_terms[len(query_as_list) - 1]
+        return terms_postings[len(query_list) - 1]
 
     def get_posting(self, term, field='article'):
         """
@@ -422,13 +462,25 @@ class SAR_Project:
         return: posting list
 
         """
-
-        if('*' in term or '?' in term):
-            term = self.get_permuterm(term)
+        #index = self.index if self.multifield else self.index[field]
+        index = self.index if field == 'article' else self.index[field]    
             
-        res = list(self.index.get(term).keys())
+        if '*' in term or '?' in term:
+            return self.get_permuterm(term)
 
-        return res
+        elif self.stemming:
+            return self.get_stemming(term, field)
+
+        if index.get(term) == None:
+            res = []
+            return res
+        else:
+            res_con_repetidos = list(index.get(term))   
+            res = []
+            for i in res_con_repetidos:
+                if i not in res:
+                    res.append(i)
+            return res
 
     def get_positionals(self, terms, field='article'):
         """
@@ -442,12 +494,14 @@ class SAR_Project:
         return: posting list
 
         """
+        index = self.index if self.multifield else self.index[field]
+
         pass
         ########################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE POSICIONALES ##
         ########################################################
 
-    def get_stemming(self, term, field='article'):
+    def get_stemming(self, term, field='article'):  # TODO: Check if it works
         """
         NECESARIO PARA LA AMPLIACION DE STEMMING
 
@@ -459,14 +513,13 @@ class SAR_Project:
         return: posting list
 
         """
+        index = self.index if self.multifield else self.index[field]
 
         stem = self.stemmer.stem(term)
 
-        ####################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
-        ####################################################
+        return [index[t][:] for t in self.sindex[stem]]
 
-    def get_permuterm(self, term, field='article'):
+    def get_permuterm(self, term, field='article'):  # TODO: Check if it works
         """
         NECESARIO PARA LA AMPLIACION DE PERMUTERM
 
@@ -478,10 +531,26 @@ class SAR_Project:
         return: posting list
 
         """
-        return []
-        ##################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
-        ##################################################
+        index = self.index if self.multifield else self.index[field]
+
+        if '*' in term:
+            p1, p2 = term.split('*')
+
+            query = p2 + '$' + p1
+
+            terms = [t for p, t in self.ptindex[field] if t.startswith(query)]
+
+            return [index[t][:] for t in terms]
+
+        else:
+            p1, p2 = term.split('?')
+
+            query = p2 + '$' + p1
+            q_len = len(query)
+
+            terms = [t for p, t in self.ptindex[field] if t.startswith(query) and len(t) - q_len <= 1]
+
+            return [index[t][:] for t in terms]
 
     def reverse_posting(self, p):
         """
@@ -497,25 +566,27 @@ class SAR_Project:
         return: posting list con todos los newid exceptos los contenidos en p
 
         """
-
         full_list = list(self.news.keys())
-        res = []
-        x = y = 0
-        
-        while x < len(full_list) and y < len(p):
-            if full_list[x] == p[y]:
-                x = x + 1
-                y = y + 1
 
-            else:
-                res.append(full_list[x])
-                x = x + 1
+        return [x for x in full_list if x not in p]
 
-        while x < len(full_list):
-            res.append(full_list[x])
-            x = x + 1
-        
-        return res
+        # res = []
+        # x = y = 0
+        #
+        # while x < len(full_list) and y < len(p):
+        #     if full_list[x] == p[y]:
+        #         x = x + 1
+        #         y = y + 1
+        #
+        #     else:
+        #         res.append(full_list[x])
+        #         x = x + 1
+        #
+        # while x < len(full_list):
+        #     res.append(full_list[x])
+        #     x = x + 1
+        #
+        # return res
 
     def and_posting(self, p1, p2):
         """
@@ -529,9 +600,11 @@ class SAR_Project:
         return: posting list con los newid incluidos en p1 y p2
 
         """
-        if len(p1) == 0 or len(p2) == 0:
+        if p1 is None or p2 is None or len(p1) == 0 or len(p2) == 0:
             return []
-        
+
+        # return [x for x in p1 if x in p2]
+
         res = []
         x = y = 0
 
@@ -562,10 +635,11 @@ class SAR_Project:
         return: posting list con los newid incluidos de p1 o p2
 
         """
-
-        if len(p1) == 0 and len(p2) == 0:
+        if p1 is None or p2 is None or len(p1) == 0 or len(p2) == 0:
             return []
-        
+
+        # return p1 + [x for x in p2 if x not in p1]
+
         res = []
         x = y = 0
 
@@ -587,7 +661,7 @@ class SAR_Project:
         while x < len(p1):
             res.append(p1[x])
             x += 1
-        
+
         while y < len(p2):
             res.append(p2[y])
             y += 1
@@ -607,9 +681,11 @@ class SAR_Project:
 
         return: posting list con los newid incluidos de p1 y no en p2
 
-        """ 
-        if len(p1) == 0:
+        """
+        if p1 is None or p2 is None or len(p1) == 0 or len(p2) == 0:
             return []
+
+        # return [x for x in p1 if x not in p2]
 
         res = []
         x = y = 0
@@ -626,7 +702,7 @@ class SAR_Project:
         while x < len(p1):
             res.append(p1[x])
             x += 1
-        
+
         return res
 
     #####################################
@@ -667,6 +743,10 @@ class SAR_Project:
         """
         result = self.solve_query(query)
 
+        print("===================================================")
+        print(f"Query: {query}")
+        print(f"Number of results: {self.solve_and_count(query)}")
+
         if self.use_ranking:
             result = self.rank_result(result, query)
 
@@ -697,3 +777,19 @@ class SAR_Project:
         ###################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE RANKING ##
         ###################################################
+
+
+if __name__ == '__main__':
+    indexer = SAR_Project()
+
+    # indexer.index_dir('corpora\\2015', multifield=True, positional=False, stem=False, permuterm=False)
+    # indexer.show_stats()
+
+    searcher = pickle.load(open('2015_index.bin', 'rb'))
+
+    searcher.set_stemming(False)
+    searcher.set_ranking(False)
+    searcher.set_showall(False)
+    searcher.set_snippet(False)
+
+    searcher.solve_and_show('isla AND valencia AND pero')
