@@ -470,13 +470,16 @@ class SAR_Project:
         elif self.stemming:
             return self.get_stemming(term, field)
 
-        res_con_repetidos = list(index.get(term))
-        res = []
-        for i in res_con_repetidos:
-            if i not in res:
-                res.append(i)
-
-        return res
+        if index.get(term) == None:
+            res = []
+            return res
+        else:
+            res_con_repetidos = list(index.get(term))   
+            res = []
+            for i in res_con_repetidos:
+                if i not in res:
+                    res.append(i)
+            return res
 
     def get_positionals(self, terms, field='article'):
         """
