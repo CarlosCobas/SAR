@@ -404,11 +404,11 @@ class SAR_Project:
         connectors = ['AND', 'OR', 'NOT']
         query_list = query.split()
 
+        query_list = list(map(lambda x: x.split(':')[::-1] if ':' in x else [x], query_list))  # separamos termino y campo si hay ':'
+
         # One word query
         if len(query_list) == 1 and query not in connectors:
-            return self.get_posting(query)
-
-        query_list = list(map(lambda x: x.split(':') if ':' in x else [x], query_list))  # separamos termino y campo si hay ':'
+            return self.get_posting(*query_list[0])
 
         # esta linea hace lo mismo que el bucle for de abajo
         # terms_postings = {i: self.get_posting(*t) for i, t in enumerate(query_list) if t[0] not in connectors}
@@ -417,8 +417,6 @@ class SAR_Project:
         term_pos = 0
 
         for term in query_list:
-            term.reverse()
-
             if len(term) == 1:
                 if term[0] not in connectors:
                     terms_postings[term_pos] = self.get_posting(*term)
@@ -536,6 +534,7 @@ class SAR_Project:
 
         stem = self.stemmer.stem(term)
 
+        # res = [x for x in [index[t] for t in sindex[stem] if stem in sindex.keys()]] + index[stem] if stem in index.keys() else []
         res = []
 
         if stem in index.keys():
@@ -566,9 +565,9 @@ class SAR_Project:
 
             query = p2 + '$' + p1
 
-            terms = [t for p, t in self.ptindex[field] if t.startswith(query)]
+            terms = [t for p, t in self.ptindex[field] if p.startswith(query)]
 
-            return [index[t][:] for t in terms]
+            return [x for x in [index[t] for t in terms]]
 
         else:
             p1, p2 = term.split('?')
@@ -576,9 +575,9 @@ class SAR_Project:
             query = p2 + '$' + p1
             q_len = len(query)
 
-            terms = [t for p, t in self.ptindex[field] if t.startswith(query) and len(t) - q_len <= 1]
+            terms = [t for p, t in self.ptindex[field] if p.startswith(query) and len(t) - q_len <= 1]
 
-            return [index[t][:] for t in terms]
+            return [x for x in [index[t] for t in terms]]
 
     def reverse_posting(self, p):
         """
@@ -810,11 +809,11 @@ if __name__ == '__main__':
     # with open('2016_SPMO.bin', 'wb') as fh:
     #     pickle.dump(indexer, fh)
 
-    searcher = pickle.load(open('2016_SPMO.bin', 'rb'))
+    searcher = pickle.load(open('2015_index_full.bin', 'rb'))
 
     searcher.set_stemming(False)
     searcher.set_ranking(False)
     searcher.set_showall(False)
     searcher.set_snippet(False)
 
-    searcher.solve_and_show('de')
+    searcher.solve_and_show('c?sa')
