@@ -338,7 +338,7 @@ class SAR_Project:
         print("TOKENS: ")
 
         if self.multifield:
-            for field, t in self.fields:
+            for field, _ in self.fields:
                 print(f"         # of tokens in '{field}' : {len(self.index[field])} ")
 
         else:
@@ -375,10 +375,6 @@ class SAR_Project:
             print("Positional queries are NOT allowed")
 
         print("===================================================")
-        pass
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
 
     ###################################
     ###                             ###
@@ -413,50 +409,56 @@ class SAR_Project:
             return self.get_posting(query)
 
         query_list = list(map(lambda x: x.split(':') if ':' in x else [x], query_list))  # separamos termino y campo si hay ':'
-        
+
+        # esta linea hace lo mismo que el bucle for de abajo
+        # terms_postings = {i: self.get_posting(*t) for i, t in enumerate(query_list) if t[0] not in connectors}
+
         terms_postings = {}
         term_pos = 0
+
         for term in query_list:
             term.reverse()
-            if(len(term) == 1):
-                if term[0] not in connectors:
-                    pl = self.get_posting(*term)
-                    terms_postings[term_pos] = pl
-            else:
-                pl = self.get_posting(*term)
-                terms_postings[term_pos] = pl
 
-            term_pos = term_pos +1
+            if len(term) == 1:
+                if term[0] not in connectors:
+                    terms_postings[term_pos] = self.get_posting(*term)
+
+            else:
+                terms_postings[term_pos] = self.get_posting(*term)
+
+            term_pos = term_pos + 1
 
         query_list = query.split()
-        
+
         x = 0
         while x < len(query_list) - 1:
 
             if query_list[x] == 'NOT':
-                terms_postings[x+1] = self.reverse_posting(terms_postings.get(x+1))
+                terms_postings[x + 1] = self.reverse_posting(terms_postings.get(x + 1))
 
             elif query_list[x] == 'AND':
-                prev_term_posting = terms_postings.get(x-1)
-                if query_list[x+1] == 'NOT':
-                    second_term_posting = self.reverse_posting(terms_postings.get(x+2))
-                    terms_postings[x+2] = self.and_posting(prev_term_posting, second_term_posting)
-                    x = x+1 #Avanzo para no repetir el NOT
+                prev_term_posting = terms_postings.get(x - 1)
+
+                if query_list[x + 1] == 'NOT':
+                    second_term_posting = self.reverse_posting(terms_postings.get(x + 2))
+                    terms_postings[x + 2] = self.and_posting(prev_term_posting, second_term_posting)
+                    x += 1  # Avanzo para no repetir el NOT
+
                 else:
-                    terms_postings[x+1] = self.and_posting(prev_term_posting, terms_postings.get(x+1))
+                    terms_postings[x + 1] = self.and_posting(prev_term_posting, terms_postings.get(x + 1))
 
             elif query_list[x] == 'OR':
-                prev_term_posting = terms_postings.get(x-1)
-                if query_list[x+1] == 'NOT':
-                    second_term_posting = self.reverse_posting(terms_postings.get(x+2))
-                    terms_postings[x+2] = self.or_posting(prev_term_posting, second_term_posting)
-                    x = x+1 #Avanzo para no repetir el NOT
+                prev_term_posting = terms_postings.get(x - 1)
+
+                if query_list[x + 1] == 'NOT':
+                    second_term_posting = self.reverse_posting(terms_postings.get(x + 2))
+                    terms_postings[x + 2] = self.or_posting(prev_term_posting, second_term_posting)
+                    x += 1  # Avanzo para no repetir el NOT
+
                 else:
-                    terms_postings[x+1] = self.or_posting(prev_term_posting, terms_postings.get(x+1))
+                    terms_postings[x + 1] = self.or_posting(prev_term_posting, terms_postings.get(x + 1))
 
-
-            x = x+1 
-
+            x += 1
 
         return terms_postings[len(query_list) - 1]
 
@@ -478,7 +480,6 @@ class SAR_Project:
 
         """
         index = self.index if not self.multifield else self.index[field]
-        
 
         if '*' in term or '?' in term:
             return self.get_permuterm(term)
@@ -490,7 +491,7 @@ class SAR_Project:
             res = []
             return res
         else:
-            res_con_repetidos = list(index.get(term))   
+            res_con_repetidos = list(index.get(term))
             res = []
             for i in res_con_repetidos:
                 if i not in res:
@@ -535,7 +536,7 @@ class SAR_Project:
         print(stem)
 
         if stem in list(self.sindex.keys()):
-            return [index[t][:]  for t in self.sindex[stem] ]
+            return [index[t][:] for t in self.sindex[stem]]
         else:
             return []
 
@@ -763,22 +764,17 @@ class SAR_Project:
         """
         result = self.solve_query(query)
 
-
         if self.use_ranking:
             result = self.rank_result(result, query)
-
 
         print("===================================================\n")
         print(f"Query: {query}")
         print(f"Number of results: {self.solve_and_count(query)}")
 
-        
         for news_id in result:
             print(news_id)
 
-
         print("=================================================\n")
-
 
     def rank_result(self, result, query):
         """
@@ -793,11 +789,7 @@ class SAR_Project:
         return: la lista de resultados ordenada
 
         """
-        pass
-
-        ###################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE RANKING ##
-        ###################################################
+        return ['Completar']
 
 
 if __name__ == '__main__':
