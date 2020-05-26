@@ -479,23 +479,25 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if not self.multifield else self.index[field]
+        index = self.index[field] if self.multifield else self.index
 
         if '*' in term or '?' in term:
             return self.get_permuterm(term)
 
-        elif self.stemming:
+        elif self.use_stemming:
             return self.get_stemming(term, field)
 
-        if index.get(term) == None:
-            res = []
-            return res
+        if index.get(term) is None:
+            return []
+
         else:
             res_con_repetidos = list(index.get(term))
             res = []
+
             for i in res_con_repetidos:
                 if i not in res:
                     res.append(i)
+
             return res
 
     def get_positionals(self, terms, field='article'):
@@ -510,7 +512,7 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if self.multifield else self.index[field]
+        index = self.index[field] if self.multifield else self.index
 
         pass
         ########################################################
@@ -529,16 +531,21 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if self.multifield else self.index[field]
+        index = self.index[field] if self.multifield else self.index
+        sindex = self.sindex[field] if self.multifield else self.sindex
 
         stem = self.stemmer.stem(term)
 
-        print(stem)
+        res = []
 
-        if stem in list(self.sindex.keys()):
-            return [index[t][:] for t in self.sindex[stem]]
-        else:
-            return []
+        if stem in index.keys():
+            res.extend(index[stem])
+
+        if stem in list(sindex.keys()):
+            for t in sindex[stem]:
+                res.extend(index[t])
+
+        return res
 
     def get_permuterm(self, term, field='article'):  # TODO: Check if it works
         """
@@ -552,7 +559,7 @@ class SAR_Project:
         return: posting list
 
         """
-        index = self.index if self.multifield else self.index[field]
+        index = self.index[field] if self.multifield else self.index
 
         if '*' in term:
             p1, p2 = term.split('*')
@@ -744,7 +751,9 @@ class SAR_Project:
 
         """
         result = self.solve_query(query)
+
         print("%s\t%d" % (query, len(result)))
+
         return len(result)  # para verificar los resultados (op: -T)
 
     def solve_and_show(self, query):
@@ -767,14 +776,14 @@ class SAR_Project:
         if self.use_ranking:
             result = self.rank_result(result, query)
 
-        print("===================================================\n")
+        print("===================================================")
         print(f"Query: {query}")
-        print(f"Number of results: {self.solve_and_count(query)}")
+        print(f"Number of results: {len(result)}")
 
-        for news_id in result:
-            print(news_id)
+        # for news_id in result:
+        #     print(news_id)
 
-        print("=================================================\n")
+        print("=================================================")
 
     def rank_result(self, result, query):
         """
@@ -795,14 +804,17 @@ class SAR_Project:
 if __name__ == '__main__':
     indexer = SAR_Project()
 
-    # indexer.index_dir('corpora\\2015', multifield=True, positional=False, stem=False, permuterm=False)
+    # indexer.index_dir('corpora\\2016', multifield=True, positional=True, stem=True, permuterm=True)
     # indexer.show_stats()
+    #
+    # with open('2016_SPMO.bin', 'wb') as fh:
+    #     pickle.dump(indexer, fh)
 
-    searcher = pickle.load(open('2015_index.bin', 'rb'))
+    searcher = pickle.load(open('2016_SPMO.bin', 'rb'))
 
     searcher.set_stemming(False)
     searcher.set_ranking(False)
     searcher.set_showall(False)
     searcher.set_snippet(False)
 
-    searcher.solve_and_show('isla AND valencia AND pero')
+    searcher.solve_and_show('de')
